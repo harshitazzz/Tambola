@@ -26,32 +26,32 @@ An architectural separation occurs between network layers and business logic.
 
 ---
 
-## 🚀 Application Walkthrough (User Flow)
+##  Application Walkthrough (User Flow)
 
 The application handles a completely synchronous multi-user flow entirely over automated polling. Here is a walkthrough of how the product functions:
 
-### 🌟 Step 1: Host Creates a Room
+###  Step 1: Host Creates a Room
 1. The **Host** accesses the landing page, characterized by lush Tambola Green formatting and dropping Framer Motion physics.
 2. The Host clicks **Create Room**. They enter their nickname and configure the game settings (e.g., Auto/Manual calling, points, and specific Tambola rules like First 5 or Full House).
 3. The system generates a unique 6-character room code and a sharable URL linking directly to the room.
 
-### 🤝 Step 2: Guests Join the Room
+###  Step 2: Guests Join the Room
 1. The **Guest** clicks the shareable link (e.g., `/join/ABCD12`).
 2. The Guest is instantly directed to a modal prompting for their nickname (bypassing the manual code-entry step).
 3. Upon entering a nickname, the Guest is moved to the **Waiting Room**.
 
-### ⏳ Step 3: The Waiting Room & Synchronization
+###  Step 3: The Waiting Room & Synchronization
 1. The Guest's UI renders a read-only, beautifully styled badge of the game's Active Rules and Settings, ensuring players are aware of the stakes before the game starts.
 2. Both Host and Guest interfaces display a live, updating list of participants in the room.
 
-### 🎮 Step 4: Starting the Game
+###  Step 4: Starting the Game
 1. The Host interface enables the **Start Game** button once participants exist.
 2. When the Host clicks start, the backend `status` is updated to `'started'`.
 3. The automated polling running on the Guest's client detects the state change, immediately and synchronously routing both the Host and all Guests to the active **Game Screen**.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Frontend:** React JS, Vite, TypeScript
 - **Styling:** Vanilla CSS, Framer Motion (Animations), ThreeJS (3D Backgrounds)
@@ -59,7 +59,7 @@ The application handles a completely synchronous multi-user flow entirely over a
 
 ---
 
-## 💻 How to Run Locally
+##  How to Run Locally
 
 You must run both the backend API and frontend servers concurrently.
 
