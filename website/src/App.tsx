@@ -1,70 +1,54 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Bell, CircleUserRound, PlusCircle, Users } from 'lucide-react';
 import ThreeBackground from './components/ThreeBackground';
 import Bubble from './components/Bubble';
+import CreateRoomFlow from './components/CreateRoomFlow/CreateRoomFlow';
+import JoinRoomFlow from './components/JoinRoomFlow/JoinRoomFlow';
+import GamePage from './pages/GamePage';
 import './App.css';
 
-function App() {
+// ── Home page ──────────────────────────────────────────────────────────────
+function HomePage() {
+  const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [showJoinRoom, setShowJoinRoom] = useState(false);
+
   const letters = ['T', 'A', 'M', 'B', 'O', 'L', 'A'];
 
-  // Bubble configurations
   const bubbles = [
     { num: 23, bottom: '10%', right: '10%', size: 100 },
-    { num: 8, bottom: '65%', right: '6%', size: 70 },
-    { num: 45, top: '20%', left: '8%', size: 85 },
-    { num: 67, bottom: '30%', left: '12%', size: 90 },
-    { num: 12, top: '15%', right: '25%', size: 60 },
-    { num: 89, bottom: '8%', left: '35%', size: 75 },
-    { num: 7, top: '40%', right: '15%', size: 55 },
+    { num: 8,  bottom: '65%', right: '6%',  size: 70  },
+    { num: 45, top: '20%',    left: '8%',   size: 85  },
+    { num: 67, bottom: '30%', left: '12%',  size: 90  },
+    { num: 12, top: '15%',    right: '25%', size: 60  },
+    { num: 89, bottom: '8%',  left: '35%',  size: 75  },
+    { num: 7,  top: '40%',    right: '15%', size: 55  },
   ];
 
-  // Stagger variants for the words container
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.3,
-      }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.3 } }
   };
 
-  // Dropping letter variants
   const letterVariants: Variants = {
     hidden: { y: -250, opacity: 0, scale: 0.8, rotate: -20 },
     visible: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      rotate: Math.random() > 0.5 ? 4 : -4, // Alternating slight tilt
-      transition: {
-        type: 'spring',
-        damping: 10,
-        stiffness: 80,
-        mass: 1.2
-      }
+      y: 0, opacity: 1, scale: 1,
+      rotate: Math.random() > 0.5 ? 4 : -4,
+      transition: { type: 'spring', damping: 10, stiffness: 80, mass: 1.2 }
     }
   };
 
-  // Fade up for subtitle and buttons
   const fadeUpVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' }
-    }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
   };
 
-  // Container to stagger bottom elements
   const bottomStagger: Variants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 1.4 }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.2, delayChildren: 1.4 } }
   };
 
   return (
@@ -92,11 +76,7 @@ function App() {
           animate="visible"
         >
           {letters.map((letter, index) => (
-            <motion.span
-              key={index}
-              className="title-letter"
-              variants={letterVariants}
-            >
+            <motion.span key={index} className="title-letter" variants={letterVariants}>
               {letter}
             </motion.span>
           ))}
@@ -113,6 +93,7 @@ function App() {
               className="btn btn-create"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setShowCreateRoom(true)}
             >
               <PlusCircle size={22} color="white" strokeWidth={2.5} />
               Create Room
@@ -122,6 +103,7 @@ function App() {
               className="btn btn-join"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setShowJoinRoom(true)}
             >
               <Users size={22} color="var(--tambola-green-dark)" strokeWidth={2.5} />
               Join Room
@@ -130,16 +112,37 @@ function App() {
         </motion.div>
       </main>
 
-      {/* Interactive Floating Bubbles */}
       {bubbles.map((bubble, i) => (
-        <Bubble
-          key={i}
-          {...bubble}
-          delay={2 + i * 0.15}
-        />
+        <Bubble key={i} {...bubble} delay={2 + i * 0.15} />
       ))}
+
+      <AnimatePresence>
+        {showCreateRoom && <CreateRoomFlow onClose={() => setShowCreateRoom(false)} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showJoinRoom && <JoinRoomFlow onClose={() => setShowJoinRoom(false)} />}
+      </AnimatePresence>
     </>
   );
+}
+
+// ── App router ─────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      {/* Direct join via sharable link */}
+      <Route path="/join/:code" element={<JoinLinkPage />} />
+      {/* Game room */}
+      <Route path="/game/:code" element={<GamePage />} />
+    </Routes>
+  );
+}
+
+// Thin wrapper so JoinRoomFlow can read :code from useParams
+function JoinLinkPage() {
+  return <JoinRoomFlow onClose={() => window.location.href = '/'} />;
 }
 
 export default App;
