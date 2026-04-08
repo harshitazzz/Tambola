@@ -1,4 +1,4 @@
-# Tambola Royale 🎲
+# Tambola 🎲
 
 A modern, highly-interactive, and aesthetically pleasing cross-platform digital version of the classic Indian bingo game, Tambola.
 
