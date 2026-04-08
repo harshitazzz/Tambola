@@ -1,4 +1,4 @@
-# Tambola 🎲
+# Tambola 
 
 A modern, highly-interactive, and aesthetically pleasing full-stack digital version of the classic Indian bingo game, Tambola.
 
@@ -6,7 +6,7 @@ This repository houses a unified platform featuring a **React + Frontend** and a
 
 ---
 
-## 🏗 Architecture & Design Patterns
+## Architecture & Design Patterns
 
 The Tambola backend is built using strict TypeScript and robust **Object-Oriented Programming (OOP) Design Patterns** to ensure state isolation, clean routing, and scalability.
 
