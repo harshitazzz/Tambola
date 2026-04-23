@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { History, Home, Users, X } from 'lucide-react';
+import { History, Home, Users, X, Volume2, VolumeX } from 'lucide-react';
 import { useGameState } from '../presentation/hooks/useGameState';
 import { GameManager } from '../infrastructure/GameManager';
+import { SoundService } from '../infrastructure/SoundService';
 import { TicketGrid } from '../presentation/components/TicketGrid';
 import { PlayerPanel } from '../presentation/components/PlayerPanel';
 import type { ClaimType } from '../domain/entities/Game';
@@ -49,6 +50,7 @@ const GamePage: React.FC = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
   const [isAutoCallStopped, setIsAutoCallStopped] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(SoundService.isSoundEnabled());
   const latestCalledCountRef = useRef(gameState.calledNumbers.length);
 
   const savedPlayerId = localStorage.getItem('currentPlayerId');
@@ -144,13 +146,31 @@ const GamePage: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <button 
-              className="flex items-center gap-2 bg-white/80 hover:bg-rose-50 hover:text-rose-700 transition-colors px-4 py-2 rounded-full font-bold border border-green-200 hover:border-rose-200 shadow-sm" 
-              onClick={() => navigate('/')}
-            >
-              <Home size={18} />
-              Leave Game
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  SoundService.initFromUserGesture();
+                  const isEnabled = SoundService.toggleSound();
+                  setSoundEnabled(isEnabled);
+                }}
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition ${
+                  soundEnabled
+                    ? 'border-green-200 bg-white/85 text-[#114c20] hover:bg-green-50'
+                    : 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
+                }`}
+                title={soundEnabled ? 'Mute sound & voice' : 'Unmute sound & voice'}
+              >
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                {soundEnabled ? 'Sound On' : 'Sound Off'}
+              </button>
+              <button 
+                className="flex items-center gap-2 bg-white/80 hover:bg-rose-50 hover:text-rose-700 transition-colors px-4 py-2 rounded-full font-bold border border-green-200 hover:border-rose-200 shadow-sm" 
+                onClick={() => navigate('/')}
+              >
+                <Home size={18} />
+                Leave Game
+              </button>
+            </div>
 
             <button
               onClick={() => setShowPlayers((visible) => !visible)}
@@ -185,6 +205,7 @@ const GamePage: React.FC = () => {
           {isHost && gameState.status === 'Waiting' && (
             <button
               onClick={() => {
+                SoundService.initFromUserGesture();
                 setIsAutoCallStopped(false);
                 manager.startGame();
               }}
@@ -234,7 +255,10 @@ const GamePage: React.FC = () => {
 
                 {isHost && roomSettings?.callingMethod !== 'auto' && (
                   <button
-                    onClick={() => manager.callNextNumber()}
+                    onClick={() => {
+                      SoundService.initFromUserGesture();
+                      manager.callNextNumber();
+                    }}
                     className="rounded-full bg-[#1a7631] px-6 py-3 text-base font-bold text-white shadow-lg shadow-green-700/20 transition hover:bg-[#114c20]"
                   >
                     Call Next Number

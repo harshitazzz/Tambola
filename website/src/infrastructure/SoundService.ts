@@ -1,6 +1,10 @@
 export class SoundService {
   private static enabled = true;
   private static ctx: AudioContext | null = null;
+  private static initialized = false;
+  private static selectedVoice: SpeechSynthesisVoice | null = null;
+  private static voicesLoaded = false;
+
   private static readonly numberWords: Record<number, string> = {
     0: "zero",
     1: "one",
@@ -32,9 +36,69 @@ export class SoundService {
     90: "ninety",
   };
 
+  /**
+   * MUST be called from a user gesture (click/tap) to unlock
+   * both AudioContext and SpeechSynthesis on modern browsers.
+   */
+  public static initFromUserGesture() {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    // Unlock AudioContext
+    this.getContext();
+
+    // Prime speech synthesis with a silent utterance
+    if ("speechSynthesis" in window) {
+      const primer = new SpeechSynthesisUtterance("");
+      primer.volume = 0;
+      window.speechSynthesis.speak(primer);
+
+      // Load voices
+      this.loadVoices();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => this.loadVoices();
+      }
+    }
+  }
+
+  private static loadVoices() {
+    if (this.voicesLoaded) return;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) return;
+
+    this.voicesLoaded = true;
+
+    // Priority: en-IN > en-US > en-GB > any English
+    const priorities = ["en-IN", "en-US", "en-GB"];
+    for (const lang of priorities) {
+      const match = voices.find(
+        (v) => v.lang === lang || v.lang.startsWith(lang)
+      );
+      if (match) {
+        this.selectedVoice = match;
+        console.log(`[TTS] Using voice: ${match.name} (${match.lang})`);
+        return;
+      }
+    }
+
+    // Fallback: any English voice
+    const englishVoice = voices.find(
+      (v) => v.lang.startsWith("en")
+    );
+    if (englishVoice) {
+      this.selectedVoice = englishVoice;
+      console.log(`[TTS] Fallback voice: ${englishVoice.name} (${englishVoice.lang})`);
+    } else {
+      // Use the default voice
+      this.selectedVoice = voices[0] || null;
+      console.log(`[TTS] Default voice: ${this.selectedVoice?.name}`);
+    }
+  }
+
   public static toggleSound() {
     this.enabled = !this.enabled;
-    if (this.enabled && this.ctx && this.ctx.state === 'suspended') {
+    if (this.enabled && this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume();
     }
     return this.enabled;
@@ -46,35 +110,43 @@ export class SoundService {
 
   private static getContext() {
     if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext || (window as any).webkitAudioContext;
       if (AudioContextClass) {
         this.ctx = new AudioContextClass();
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx && this.ctx.state === "suspended") {
       this.ctx.resume();
     }
     return this.ctx;
   }
 
-  private static playFrequency(freq: number, type: OscillatorType, durationMs: number) {
+  private static playFrequency(
+    freq: number,
+    type: OscillatorType,
+    durationMs: number
+  ) {
     if (!this.enabled) return;
     try {
       const ctx = this.getContext();
       if (!ctx) return;
-      
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
+
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      
+
       gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + durationMs / 1000);
-      
+      gain.gain.exponentialRampToValueAtTime(
+        0.00001,
+        ctx.currentTime + durationMs / 1000
+      );
+
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
+
       osc.start();
       osc.stop(ctx.currentTime + durationMs / 1000);
     } catch (e) {
@@ -83,9 +155,15 @@ export class SoundService {
   }
 
   public static playCallSound(number?: number) {
+    // Ensure initialization on first sound play
+    if (!this.initialized) {
+      this.initFromUserGesture();
+    }
+
     this.playFrequency(600, "sine", 300);
     if (typeof number === "number") {
-      window.setTimeout(() => this.speakNumber(number), 180);
+      // Wait for the beep to finish before speaking
+      window.setTimeout(() => this.speakNumber(number), 350);
     }
   }
 
@@ -99,17 +177,47 @@ export class SoundService {
     setTimeout(() => this.playFrequency(659, "sine", 400), 400);
   }
 
-  private static speakNumber(number: number) {
-    if (!this.enabled || !("speechSynthesis" in window)) return;
+  public static speakNumber(number: number) {
+    if (!this.enabled) return;
+    if (!("speechSynthesis" in window)) {
+      console.warn("[TTS] speechSynthesis not available in this browser");
+      return;
+    }
+
+    // Ensure voices are loaded
+    if (!this.voicesLoaded) {
+      this.loadVoices();
+    }
 
     const phrase = this.getNumberCallPhrase(number);
+    console.log(`[TTS] Speaking: "${phrase}"`);
+
+    // Cancel any pending speech
+    window.speechSynthesis.cancel();
+
     const utterance = new SpeechSynthesisUtterance(phrase);
-    utterance.lang = "en-IN";
-    utterance.rate = 0.88;
-    utterance.pitch = 1;
+
+    // Assign voice if available
+    if (this.selectedVoice) {
+      utterance.voice = this.selectedVoice;
+      utterance.lang = this.selectedVoice.lang;
+    } else {
+      utterance.lang = "en-US";
+    }
+
+    utterance.rate = 0.85;
+    utterance.pitch = 1.05;
     utterance.volume = 1;
 
-    window.speechSynthesis.cancel();
+    // Chrome workaround: speechSynthesis can get stuck if paused
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    utterance.onerror = (event) => {
+      console.warn("[TTS] Speech error:", event.error);
+    };
+
     window.speechSynthesis.speak(utterance);
   }
 
@@ -120,7 +228,9 @@ export class SoundService {
       .join(" ");
 
     const numberCall = this.getNumberWords(number);
-    return digitCall === numberCall ? numberCall : `${digitCall} ${numberCall}`;
+    return digitCall === numberCall
+      ? `Number ${numberCall}`
+      : `${digitCall}, ${numberCall}`;
   }
 
   private static getNumberWords(number: number): string {
