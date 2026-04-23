@@ -106,8 +106,11 @@ export class GameManager {
     if (result.calledNumber === null) return null;
 
     this.availableNumbers = result.remainingNumbers;
-    this.state.status = result.nextStatus;
-    this.state.calledNumbers.push(result.calledNumber);
+    this.state = {
+      ...this.state,
+      status: result.nextStatus,
+      calledNumbers: [...this.state.calledNumbers, result.calledNumber]
+    };
     SoundService.playCallSound(result.calledNumber);
 
     socketService.emit('call_number', { code: this.state.id, number: result.calledNumber });
@@ -163,22 +166,28 @@ export class GameManager {
 
   // --- Synchronization Methods for Replicas ---
   public syncStartGame() {
-    this.state.status = "Playing";
-    this.state.calledNumbers = [];
-    this.state.claims = [];
+    this.state = {
+      ...this.state,
+      status: "Playing",
+      calledNumbers: [],
+      claims: []
+    };
     this.notify();
   }
 
   public syncNumberCalled(num: number) {
     if (!this.state.calledNumbers.includes(num)) {
-      this.state.calledNumbers.push(num);
+      const newCalledNumbers = [...this.state.calledNumbers, num];
       // Remove from available so we don't accidentally call it if we become host somehow
       this.availableNumbers = this.availableNumbers.filter(n => n !== num);
-      SoundService.playCallSound(num);
       
-      if (this.availableNumbers.length === 0) {
-        this.state.status = "Finished";
-      }
+      this.state = {
+        ...this.state,
+        calledNumbers: newCalledNumbers,
+        status: this.availableNumbers.length === 0 ? "Finished" : this.state.status
+      };
+
+      SoundService.playCallSound(num);
       this.notify();
     }
   }

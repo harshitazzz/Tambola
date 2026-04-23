@@ -4,6 +4,8 @@ class SocketService {
   private static instance: SocketService;
   private socket: Socket | null = null;
   private roomCode: string | null = null;
+  // Queue listeners registered before socket is created
+  private pendingListeners: Array<{ event: string; callback: (...args: any[]) => void }> = [];
 
   private constructor() {}
 
@@ -22,9 +24,16 @@ class SocketService {
       this.socket.on('connect', () => {
         console.log('Connected to WebSocket server');
         if (this.roomCode) {
-           this.joinRoom(this.roomCode);
+          // Re-join the room on reconnect
+          this.socket?.emit('join_room', this.roomCode);
         }
       });
+
+      // Flush any listeners that were registered before socket was created
+      for (const { event, callback } of this.pendingListeners) {
+        this.socket.on(event, callback);
+      }
+      this.pendingListeners = [];
     }
   }
 
@@ -50,12 +59,23 @@ class SocketService {
   public on(event: string, callback: (...args: any[]) => void): void {
     if (this.socket) {
       this.socket.on(event, callback);
+    } else {
+      // Queue the listener if socket isn't created yet
+      this.pendingListeners.push({ event, callback });
     }
   }
 
   public off(event: string, callback?: (...args: any[]) => void): void {
     if (this.socket) {
       this.socket.off(event, callback);
+    }
+    // Also remove from pending queue
+    if (!callback) {
+      this.pendingListeners = this.pendingListeners.filter(l => l.event !== event);
+    } else {
+      this.pendingListeners = this.pendingListeners.filter(
+        l => !(l.event === event && l.callback === callback)
+      );
     }
   }
 
