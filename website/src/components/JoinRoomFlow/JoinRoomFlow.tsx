@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import EnterCodeStep from './EnterCodeStep';
 import JoinNicknameStep from './JoinNicknameStep';
 import WaitingRoomStep from './WaitingRoomStep';
@@ -22,6 +22,14 @@ const JoinRoomFlow: React.FC<JoinRoomFlowProps> = ({ onClose }) => {
   const [playerId] = useState(() => `player-${Date.now()}`);
   const [roomData, setRoomData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Auto-dismiss error after 4 seconds
+  useEffect(() => {
+    if (!errorMsg) return;
+    const timer = setTimeout(() => setErrorMsg(null), 4000);
+    return () => clearTimeout(timer);
+  }, [errorMsg]);
 
   // If URL has a code, validate it on mount
   useEffect(() => {
@@ -30,24 +38,26 @@ const JoinRoomFlow: React.FC<JoinRoomFlowProps> = ({ onClose }) => {
         .then(r => r.json())
         .then(result => {
           if (!result.success) {
-            alert('Invalid room link. The room may have expired.');
-            navigate('/');
+            setErrorMsg('Invalid room link. The room may have expired.');
+            setTimeout(() => navigate('/'), 3000);
           }
         })
         .catch(() => {
-          alert('Could not connect to server.');
-          navigate('/');
+          setErrorMsg('Could not connect to server.');
+          setTimeout(() => navigate('/'), 3000);
         });
     }
   }, [hasUrlCode, urlCode, navigate]);
 
   const handleCodeNext = (code: string) => {
+    setErrorMsg(null);
     setRoomCode(code);
     setStep(2);
   };
 
   const handleNicknameNext = async (nickname: string) => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const res = await fetch('/api/rooms/join', {
         method: 'POST',
@@ -60,10 +70,10 @@ const JoinRoomFlow: React.FC<JoinRoomFlowProps> = ({ onClose }) => {
         setRoomData(result.data);
         setStep(3);
       } else {
-        alert(result.message || 'Failed to join room.');
+        setErrorMsg(result.message || 'Failed to join room.');
       }
     } catch {
-      alert('Could not connect to server.');
+      setErrorMsg('Could not connect to server.');
     } finally {
       setLoading(false);
     }
@@ -84,6 +94,49 @@ const JoinRoomFlow: React.FC<JoinRoomFlowProps> = ({ onClose }) => {
         )}
 
         <div className="flow-container">
+          {/* Error Toast */}
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  background: 'linear-gradient(135deg, #fff1f1, #ffe4e4)',
+                  border: '1.5px solid rgba(220, 50, 50, 0.3)',
+                  borderRadius: '14px',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.92rem',
+                  fontWeight: 600,
+                  color: '#991b1b',
+                  boxShadow: '0 4px 14px rgba(220, 50, 50, 0.12)',
+                }}
+              >
+                <AlertTriangle size={18} style={{ flexShrink: 0, color: '#dc3232' }} />
+                <span>{errorMsg}</span>
+                <button
+                  onClick={() => setErrorMsg(null)}
+                  style={{
+                    marginLeft: 'auto',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#991b1b',
+                    padding: '2px',
+                    display: 'flex',
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {loading && (
             <div className="loading-overlay">
               <div className="spinner" />

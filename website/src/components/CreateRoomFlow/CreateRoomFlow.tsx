@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import NicknameStep from './NicknameStep';
 import SettingsStep from './SettingsStep';
 import LobbyStep from './LobbyStep';
@@ -14,6 +14,14 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
   const [nickname, setNickname] = useState('');
   const [roomData, setRoomData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Auto-dismiss error after 4 seconds
+  useEffect(() => {
+    if (!errorMsg) return;
+    const timer = setTimeout(() => setErrorMsg(null), 4000);
+    return () => clearTimeout(timer);
+  }, [errorMsg]);
 
   const handleNicknameNext = (name: string) => {
     setNickname(name);
@@ -22,6 +30,7 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
 
   const handleSettingsNext = async (settings: any) => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const response = await fetch('/api/rooms/create', {
         method: 'POST',
@@ -53,7 +62,7 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
       }
     } catch (error) {
       console.error('Failed to create room:', error);
-      alert('Error connecting to backend server. Make sure it is running on port 3000.');
+      setErrorMsg('Error connecting to backend server. Make sure it is running on port 3000.');
     } finally {
       setLoading(false);
     }
@@ -73,6 +82,49 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
         </button>
 
         <div className="flow-container">
+          {/* Error Toast */}
+          <AnimatePresence>
+            {errorMsg && (
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25 }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  background: 'linear-gradient(135deg, #fff1f1, #ffe4e4)',
+                  border: '1.5px solid rgba(220, 50, 50, 0.3)',
+                  borderRadius: '14px',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.92rem',
+                  fontWeight: 600,
+                  color: '#991b1b',
+                  boxShadow: '0 4px 14px rgba(220, 50, 50, 0.12)',
+                }}
+              >
+                <AlertTriangle size={18} style={{ flexShrink: 0, color: '#dc3232' }} />
+                <span>{errorMsg}</span>
+                <button
+                  onClick={() => setErrorMsg(null)}
+                  style={{
+                    marginLeft: 'auto',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#991b1b',
+                    padding: '2px',
+                    display: 'flex',
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {loading && (
             <div className="loading-overlay">
               <div className="spinner"></div>
