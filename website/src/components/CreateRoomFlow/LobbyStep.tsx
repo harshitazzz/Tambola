@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, Users, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { socketService } from '../../infrastructure/SocketService';
 
 interface Player {
   id: string;
@@ -22,9 +23,11 @@ const LobbyStep: React.FC<LobbyStepProps> = ({ roomData }) => {
   const [starting, setStarting] = useState(false);
   const navigate = useNavigate();
 
-  // Poll room state every 3s
   useEffect(() => {
-    const interval = setInterval(async () => {
+    // Join the specific room via socket
+    socketService.joinRoom(roomData.code);
+
+    const fetchPlayers = async () => {
       try {
         const response = await fetch(`/api/rooms/get/${roomData.code}`);
         const result = await response.json();
@@ -34,9 +37,23 @@ const LobbyStep: React.FC<LobbyStepProps> = ({ roomData }) => {
       } catch (error) {
         console.error('Failed to fetch players:', error);
       }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [roomData.code]);
+    };
+
+    // When a player joins, refetch the participant list
+    socketService.on('player_joined', () => {
+      fetchPlayers();
+    });
+
+    // If host starts the game, automatically navigate to the game page
+    socketService.on('game_started', () => {
+       navigate(`/game/${roomData.code}`);
+    });
+
+    return () => {
+      socketService.off('player_joined');
+      socketService.off('game_started');
+    };
+  }, [roomData.code, navigate]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(roomData.joinLink);
@@ -52,6 +69,8 @@ const LobbyStep: React.FC<LobbyStepProps> = ({ roomData }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: roomData.code })
       });
+      // Emitting through socket so everyone navigates
+      socketService.emit('start_game', roomData.code);
       navigate(`/game/${roomData.code}`);
     } catch (err) {
       console.error('Failed to start game', err);

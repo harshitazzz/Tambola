@@ -1,43 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  font-family: 'Outfit', system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 500;
-
-  color-scheme: light;
-  background-color: #FEFBEA; /* Creamy beige */
-  color: #333333;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  --tambola-green: #1a7631;
-  --tambola-green-dark: #0f461d;
-  --tambola-green-light: #a4f4b6;
-  --text-dark: #2c352d;
-  --text-muted: #5e6b5f;
+@layer base {
+  :root {
+    --tambola-green: #1a7631;
+    --tambola-green-light: #e6f4ea;
+    --tambola-green-dark: #114c20;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+  }
+  body {
+    @apply antialiased;
+  }
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Custom animations for number call */
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-body {
-  margin: 0;
-  min-width: 100vw;
-  min-height: 100vh;
-  overflow-x: hidden;
-  background: 
-    radial-gradient(circle at 10% 20%, rgba(164, 244, 182, 0.4) 0%, transparent 40%),
-    radial-gradient(circle at 90% 70%, rgba(255, 226, 169, 0.4) 0%, transparent 40%),
-    #FEFBEA; /* Background gradients matching mockup */
-}
-
-canvas {
-  display: block;
+.animate-pop-in {
+  animation: popIn 0.4s ease-out forwards;
 }

@@ -33,18 +33,20 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
       
       if (result.success) {
         // Automatically join as host
+        const hostId = `host-${Date.now()}`;
         const joinResponse = await fetch('/api/rooms/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             code: result.data.code,
             playerName: nickname,
-            playerId: `host-${Date.now()}`
+            playerId: hostId
           })
         });
         
         const joinResult = await joinResponse.json();
         if (joinResult.success) {
+          localStorage.setItem('currentPlayerId', hostId);
           setRoomData(joinResult.data);
           setStep(3);
         }
@@ -57,10 +59,6 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
     }
   };
 
-  const handleStartGame = () => {
-    console.log('Starting game with data:', roomData);
-    // Future implementation: Navigate to game page
-  };
 
   return (
     <div className="modal-overlay">
@@ -97,7 +95,6 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
               <LobbyStep 
                 key="step3" 
                 roomData={roomData} 
-                onStart={handleStartGame} 
               />
             )}
           </AnimatePresence>

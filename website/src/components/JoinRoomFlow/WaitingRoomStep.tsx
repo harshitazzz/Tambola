@@ -38,25 +38,38 @@ const WaitingRoomStep: React.FC<WaitingRoomStepProps> = ({
   const [settings] = useState<GameSettings>(initialSettings);
   const navigate = useNavigate();
 
-  // Poll for game start + player list
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/rooms/get/${roomCode}`);
-        const result = await res.json();
-        if (result.success) {
-          setPlayers(result.data.players);
-          // When host starts game, navigate everyone to game page
-          if (result.data.status === 'started') {
-            navigate(`/game/${roomCode}`);
-          }
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    }, 2000);
+    import('../../infrastructure/SocketService').then(({ socketService }) => {
+      socketService.joinRoom(roomCode);
 
-    return () => clearInterval(interval);
+      const fetchState = async () => {
+        try {
+          const res = await fetch(`/api/rooms/get/${roomCode}`);
+          const result = await res.json();
+          if (result.success) {
+            setPlayers(result.data.players);
+            if (result.data.status === 'started') {
+              navigate(`/game/${roomCode}`);
+            }
+          }
+        } catch (err) {
+          console.error('Fetch error:', err);
+        }
+      };
+
+      socketService.on('player_joined', () => {
+        fetchState();
+      });
+
+      socketService.on('game_started', () => {
+        navigate(`/game/${roomCode}`);
+      });
+
+      return () => {
+        socketService.off('player_joined');
+        socketService.off('game_started');
+      };
+    });
   }, [roomCode, navigate]);
 
   return (
