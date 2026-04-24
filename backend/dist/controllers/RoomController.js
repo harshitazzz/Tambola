@@ -4,10 +4,10 @@ exports.RoomController = void 0;
 const RoomManager_1 = require("../services/RoomManager");
 const roomManager = RoomManager_1.RoomManager.getInstance();
 class RoomController {
-    static createRoom(req, res) {
+    static async createRoom(req, res) {
         const { settings } = req.body;
         try {
-            const newRoom = roomManager.createRoom(settings);
+            const newRoom = await roomManager.createRoom(settings);
             res.status(201).json({
                 success: true,
                 message: 'Room created successfully',
@@ -21,7 +21,7 @@ class RoomController {
             });
         }
     }
-    static joinRoom(req, res) {
+    static async joinRoom(req, res) {
         const { code, playerName, playerId } = req.body;
         if (!code || !playerName || !playerId) {
             res.status(400).json({
@@ -31,7 +31,7 @@ class RoomController {
             return;
         }
         try {
-            const room = roomManager.joinRoom(code, playerName, playerId);
+            const room = await roomManager.joinRoom(code, playerName, playerId);
             if (room) {
                 res.status(200).json({
                     success: true,
@@ -53,7 +53,7 @@ class RoomController {
             });
         }
     }
-    static getRoom(req, res) {
+    static async getRoom(req, res) {
         const { code } = req.params;
         try {
             const room = roomManager.getRoom(code);
@@ -77,12 +77,11 @@ class RoomController {
             });
         }
     }
-    static startRoom(req, res) {
+    static async startRoom(req, res) {
         const { code } = req.body;
         try {
-            const room = roomManager.getRoom(code);
+            const room = await roomManager.startRoom(code);
             if (room) {
-                room.startGame();
                 res.status(200).json({
                     success: true,
                     message: 'Game started',

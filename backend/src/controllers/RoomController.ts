@@ -4,10 +4,10 @@ import { RoomManager } from '../services/RoomManager';
 const roomManager = RoomManager.getInstance();
 
 export class RoomController {
-  public static createRoom(req: Request, res: Response): void {
+  public static async createRoom(req: Request, res: Response): Promise<void> {
     const { settings } = req.body;
     try {
-      const newRoom = roomManager.createRoom(settings);
+      const newRoom = await roomManager.createRoom(settings);
       res.status(201).json({
         success: true,
         message: 'Room created successfully',
@@ -21,7 +21,7 @@ export class RoomController {
     }
   }
 
-  public static joinRoom(req: Request, res: Response): void {
+  public static async joinRoom(req: Request, res: Response): Promise<void> {
     const { code, playerName, playerId } = req.body;
 
     if (!code || !playerName || !playerId) {
@@ -33,7 +33,7 @@ export class RoomController {
     }
 
     try {
-      const room = roomManager.joinRoom(code, playerName, playerId);
+      const room = await roomManager.joinRoom(code, playerName, playerId);
 
       if (room) {
         res.status(200).json({
@@ -55,7 +55,7 @@ export class RoomController {
     }
   }
 
-  public static getRoom(req: Request, res: Response): void {
+  public static async getRoom(req: Request, res: Response): Promise<void> {
     const { code } = req.params;
     try {
       const room = roomManager.getRoom(code as string);
@@ -78,12 +78,11 @@ export class RoomController {
     }
   }
 
-  public static startRoom(req: Request, res: Response): void {
+  public static async startRoom(req: Request, res: Response): Promise<void> {
     const { code } = req.body;
     try {
-      const room = roomManager.getRoom(code as string);
+      const room = await roomManager.startRoom(code as string);
       if (room) {
-        room.startGame();
         res.status(200).json({
           success: true,
           message: 'Game started',

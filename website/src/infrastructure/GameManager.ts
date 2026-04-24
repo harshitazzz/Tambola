@@ -7,8 +7,10 @@ import { ClaimGameUseCase } from "../application/use-cases/ClaimGame";
 import { ClaimStrategyFactory } from "../application/strategies/ClaimStrategyFactory";
 import { SoundService } from "./SoundService";
 import { socketService } from "./SocketService";
+import type { Ticket } from "../domain/entities/Ticket";
 
 type Listener = (state: GameState) => void;
+type PlayStatus = "Waiting" | "Playing" | "Finished";
 
 export class GameManager {
   private static instance: GameManager;
@@ -77,6 +79,7 @@ export class GameManager {
     const ticketId = "t-" + Date.now();
     const ticket = this.generateTicketUseCase.execute(player.id, ticketId);
     this.state.tickets.push(ticket);
+    socketService.emit("sync_ticket", { code: this.state.id, ticket });
 
     this.notify();
     return player;
@@ -220,6 +223,39 @@ export class GameManager {
     );
 
     this.state.tickets[ticketIndex] = { ...ticket, cells: nextCells };
+    this.notify();
+  }
+
+  public hydrateFromServerState(payload: {
+    status: "waiting" | "started";
+    tickets: Ticket[];
+    calledNumbers: number[];
+    markedNumbers: Array<{
+      ticketId: string;
+      cellId: string;
+      isMarked: boolean;
+      markedAtCallCount?: number;
+    }>;
+  }) {
+    const nextStatus: PlayStatus = payload.status === "started"
+      ? (payload.calledNumbers.length >= 90 ? "Finished" : "Playing")
+      : "Waiting";
+
+    this.state = {
+      ...this.state,
+      status: nextStatus,
+      tickets: payload.tickets.length > 0 ? payload.tickets : this.state.tickets,
+      calledNumbers: [...payload.calledNumbers]
+    };
+
+    this.availableNumbers = Array.from({ length: 90 }, (_, i) => i + 1).filter(
+      (num) => !payload.calledNumbers.includes(num)
+    );
+
+    payload.markedNumbers.forEach((marked) => {
+      this.syncMarkNumber(marked.ticketId, marked.cellId, marked.isMarked, marked.markedAtCallCount);
+    });
+
     this.notify();
   }
 
