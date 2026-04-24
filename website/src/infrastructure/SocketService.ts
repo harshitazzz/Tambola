@@ -19,7 +19,7 @@ class SocketService {
   public connect(): void {
     if (!this.socket) {
       // Connect to the backend
-      this.socket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000');
+      this.socket = io(import.meta.env.VITE_BACKEND_URL || window.location.origin);
       
       this.socket.on('connect', () => {
         console.log('Connected to WebSocket server');

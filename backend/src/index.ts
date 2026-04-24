@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import roomRoutes from './routes/roomRoutes';
@@ -20,6 +21,12 @@ app.use('/api/rooms', roomRoutes);
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Tambola Backend is running' });
+});
+
+const frontendPath = path.resolve(__dirname, '../../website/dist');
+app.use(express.static(frontendPath));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 const httpServer = createServer(app);

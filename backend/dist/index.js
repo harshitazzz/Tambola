@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const roomRoutes_1 = __importDefault(require("./routes/roomRoutes"));
@@ -21,6 +22,11 @@ app.use('/api/rooms', roomRoutes_1.default);
 // Health check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Tambola Backend is running' });
+});
+const frontendPath = path_1.default.resolve(__dirname, '../../website/dist');
+app.use(express_1.default.static(frontendPath));
+app.get('*', (_req, res) => {
+    res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
