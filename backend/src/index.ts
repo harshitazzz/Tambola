@@ -25,7 +25,7 @@ app.get('/health', (req, res) => {
 
 const frontendPath = path.resolve(__dirname, '../../website/dist');
 app.use(express.static(frontendPath));
-app.get('/:path(.*)', (_req, res) => {
+app.use((_req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
