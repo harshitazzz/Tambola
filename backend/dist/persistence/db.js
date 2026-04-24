@@ -12,5 +12,5 @@ async function connectToDatabase() {
         return;
     }
     await mongoose_1.default.connect(mongoUri);
-    console.log(`Connected to MongoDB: ${mongoUri}`);
+    console.log('Connected to MongoDB');
 }

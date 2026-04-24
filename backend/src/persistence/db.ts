@@ -10,5 +10,5 @@ export async function connectToDatabase(): Promise<void> {
   }
 
   await mongoose.connect(mongoUri);
-  console.log(`Connected to MongoDB: ${mongoUri}`);
+  console.log('Connected to MongoDB');
 }
