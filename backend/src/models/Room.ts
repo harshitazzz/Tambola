@@ -156,7 +156,8 @@ export class Room {
   }
 
   public getJoinLink(): string {
-    return `http://localhost:5173/join/${this.code}`;
+    const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    return `${frontendBaseUrl}/join/${this.code}`;
   }
 
   public toSnapshot(): RoomSnapshot {
