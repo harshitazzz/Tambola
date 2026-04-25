@@ -59,8 +59,6 @@ function HomePage() {
         <div className="logo-text">Tambola </div>
         <nav className="nav-links">
           <span className="nav-link active">Lobby</span>
-          <span className="nav-link">Rooms</span>
-          <span className="nav-link">Profile</span>
         </nav>
         <div className="nav-actions">
           <Bell className="nav-icon" size={24} />

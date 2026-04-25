@@ -113,8 +113,11 @@ export class GameManager {
 
   private resetNumbers() {
     this.availableNumbers = Array.from({ length: 90 }, (_, i) => i + 1);
-    // Shuffle
-    this.availableNumbers.sort(() => Math.random() - 0.5);
+    // Fisher-Yates Shuffle for unbiased randomness
+    for (let i = this.availableNumbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.availableNumbers[i], this.availableNumbers[j]] = [this.availableNumbers[j], this.availableNumbers[i]];
+    }
   }
 
   public callNextNumber(): number | null {
