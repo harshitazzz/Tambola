@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { Bell, CircleUserRound, PlusCircle, Users } from 'lucide-react';
+import { PlusCircle, Users } from 'lucide-react';
 import ThreeBackground from './components/ThreeBackground';
 import Bubble from './components/Bubble';
 import CreateRoomFlow from './components/CreateRoomFlow/CreateRoomFlow';
@@ -57,13 +57,6 @@ function HomePage() {
 
       <header className="header">
         <div className="logo-text">Tambola </div>
-        <nav className="nav-links">
-          <span className="nav-link active">Lobby</span>
-        </nav>
-        <div className="nav-actions">
-          <Bell className="nav-icon" size={24} />
-          <CircleUserRound className="nav-icon" size={24} />
-        </div>
       </header>
 
       <main className="main-content">

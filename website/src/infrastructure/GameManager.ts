@@ -295,6 +295,11 @@ export class GameManager {
     this.availableNumbers = Array.from({ length: 90 }, (_, i) => i + 1).filter(
       (num) => !payload.calledNumbers.includes(num)
     );
+    // Fisher-Yates shuffle so subsequent calls are random
+    for (let i = this.availableNumbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.availableNumbers[i], this.availableNumbers[j]] = [this.availableNumbers[j], this.availableNumbers[i]];
+    }
 
     payload.markedNumbers.forEach((marked) => {
       this.syncMarkNumber(marked.ticketId, marked.cellId, marked.isMarked, marked.markedAtCallCount);
