@@ -25,7 +25,10 @@ app.get('/health', (req, res) => {
 });
 const frontendPath = path_1.default.resolve(__dirname, '../../website/dist');
 app.use(express_1.default.static(frontendPath));
-app.get('*', (_req, res) => {
+app.use((req, res, next) => {
+    if (req.path.startsWith('/socket.io')) {
+        return next();
+    }
     res.sendFile(path_1.default.join(frontendPath, 'index.html'));
 });
 const httpServer = (0, http_1.createServer)(app);

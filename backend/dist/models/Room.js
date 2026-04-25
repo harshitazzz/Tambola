@@ -76,7 +76,8 @@ class Room {
         return this.markedNumbers;
     }
     getJoinLink() {
-        return `http://localhost:5173/join/${this.code}`;
+        const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        return `${frontendBaseUrl}/join/${this.code}`;
     }
     toSnapshot() {
         return {
