@@ -49,6 +49,7 @@ io.on('connection', (socket) => {
             socket.emit('room_state_sync', {
                 code: room.getCode(),
                 status: room.getStatus(),
+                players: room.getPlayers(),
                 tickets: room.getTickets(),
                 calledNumbers: room.getCalledNumbers(),
                 currentNumber: room.getCurrentNumber(),

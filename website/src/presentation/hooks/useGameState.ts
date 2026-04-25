@@ -19,6 +19,10 @@ interface MarkNumberPayload {
 interface RoomStateSyncPayload {
   code: string;
   status: 'waiting' | 'started';
+  players: Array<{
+    id: string;
+    name: string;
+  }>;
   tickets: Array<{
     id: string;
     playerId: string;
@@ -70,6 +74,7 @@ export const useGameState = (roomId: string) => {
       if (data.code !== roomId) return;
       manager.hydrateFromServerState({
         status: data.status,
+        players: data.players,
         tickets: data.tickets,
         calledNumbers: data.calledNumbers,
         markedNumbers: data.markedNumbers
@@ -81,13 +86,12 @@ export const useGameState = (roomId: string) => {
        console.log('A player joined the game room!');
     });
 
-    // Auto-add a default player if not exists (for local testing purposes)
-    if (manager.getState().players.length === 0) {
-      if (savedPlayerId) {
-         manager.addPlayer(isHost ? "Local Host" : "Local Player", savedPlayerId);
-      } else {
-         manager.addPlayer("Local Player 1");
-      }
+    // Ensure the local player has a ticket, or generate one
+    if (savedPlayerId) {
+      // Small timeout to allow hydrateFromServerState to finish if it's currently processing
+      setTimeout(() => {
+        manager.ensureLocalPlayerHasTicket(savedPlayerId, isHost ? "Local Host" : "Local Player");
+      }, 50);
     }
 
     const unsubscribe = manager.subscribe((state) => {

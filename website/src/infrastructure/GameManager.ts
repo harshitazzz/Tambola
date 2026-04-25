@@ -85,6 +85,23 @@ export class GameManager {
     return player;
   }
 
+  public ensureLocalPlayerHasTicket(playerId: string, fallbackName: string): void {
+    let player = this.state.players.find(p => p.id === playerId);
+    if (!player) {
+      player = { id: playerId, name: fallbackName };
+      this.state.players.push(player);
+    }
+    
+    const hasTicket = this.state.tickets.some(t => t.playerId === playerId);
+    if (!hasTicket) {
+      const ticketId = "t-" + Date.now();
+      const ticket = this.generateTicketUseCase.execute(player.id, ticketId);
+      this.state.tickets.push(ticket);
+      socketService.emit("sync_ticket", { code: this.state.id, ticket });
+      this.notify();
+    }
+  }
+
   public startGame() {
     this.state.status = "Playing";
     this.state.calledNumbers = [];
@@ -228,6 +245,7 @@ export class GameManager {
 
   public hydrateFromServerState(payload: {
     status: "waiting" | "started";
+    players?: Player[];
     tickets: Ticket[];
     calledNumbers: number[];
     markedNumbers: Array<{
@@ -241,10 +259,33 @@ export class GameManager {
       ? (payload.calledNumbers.length >= 90 ? "Finished" : "Playing")
       : "Waiting";
 
+    const mergedTickets = [...this.state.tickets];
+    payload.tickets.forEach(serverTicket => {
+      const idx = mergedTickets.findIndex(t => t.id === serverTicket.id);
+      if (idx >= 0) {
+        mergedTickets[idx] = serverTicket;
+      } else {
+        mergedTickets.push(serverTicket);
+      }
+    });
+
+    const mergedPlayers = [...this.state.players];
+    if (payload.players) {
+      payload.players.forEach(serverPlayer => {
+        const idx = mergedPlayers.findIndex(p => p.id === serverPlayer.id);
+        if (idx >= 0) {
+          mergedPlayers[idx] = serverPlayer;
+        } else {
+          mergedPlayers.push(serverPlayer);
+        }
+      });
+    }
+
     this.state = {
       ...this.state,
       status: nextStatus,
-      tickets: payload.tickets.length > 0 ? payload.tickets : this.state.tickets,
+      players: mergedPlayers,
+      tickets: mergedTickets,
       calledNumbers: [...payload.calledNumbers]
     };
 
