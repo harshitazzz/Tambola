@@ -79,14 +79,25 @@ interface ClaimResultPayload extends ClaimPayload {
   isValid: boolean;
 }
 
+interface SocketData {
+  code: string;
+  playerId?: string;
+}
+
+const socketDataMap = new Map<string, SocketData>();
 const roomManager = RoomManager.getInstance();
 
 io.on('connection', (socket: Socket) => {
   console.log(`Socket connected: ${socket.id}`);
 
-  socket.on('join_room', (code: string) => {
+  socket.on('join_room', (data: { code: string; playerId?: string } | string) => {
+    // Handle both old format (string code) and new format (object)
+    const code = typeof data === 'string' ? data : data.code;
+    const playerId = typeof data === 'string' ? undefined : data.playerId;
+
     socket.join(code);
     console.log(`Socket ${socket.id} joined room: ${code}`);
+    socketDataMap.set(socket.id, { code, playerId });
 
     const room = roomManager.getRoom(code);
     if (room) {
@@ -106,8 +117,12 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('start_game', (code: string) => {
-    void roomManager.startRoom(code);
+    console.log(`[Socket] Received start_game for code: ${code}`);
+    void roomManager.startRoom(code).then((room) => {
+       console.log(`[Socket] Room status after startRoom: ${room?.getStatus()}`);
+    });
     io.to(code).emit('game_started');
+    console.log(`[Socket] Emitted game_started to room: ${code}`);
   });
 
   socket.on('call_number', async ({ code, number }: CallNumberPayload) => {
@@ -132,8 +147,32 @@ io.on('connection', (socket: Socket) => {
      io.to(code).emit('claim_result_broadcast', { playerId, claimType, isValid });
   });
 
+  socket.on('player_finished', ({ code, playerId, rank }: { code: string, playerId: string, rank: number }) => {
+    const room = roomManager.getRoom(code);
+    if (room) {
+      const player = room.getPlayers().find(p => p.id === playerId);
+      if (player) {
+        player.isFinished = true;
+        player.finishedRank = rank;
+      }
+    }
+    socket.to(code).emit('player_finished_broadcast', { playerId, rank });
+  });
+
   socket.on('disconnect', () => {
     console.log(`Socket disconnected: ${socket.id}`);
+    const data = socketDataMap.get(socket.id);
+    if (data) {
+      const { code, playerId } = data;
+      if (playerId) {
+        const room = roomManager.getRoom(code);
+        if (room) {
+          room.removePlayer(playerId);
+          io.to(code).emit('player_left', playerId);
+        }
+      }
+      socketDataMap.delete(socket.id);
+    }
   });
 });
 

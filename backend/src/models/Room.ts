@@ -1,6 +1,9 @@
 export interface Player {
   id: string;
   name: string;
+  isFinished?: boolean;
+  finishedRank?: number;
+  hasLeft?: boolean;
 }
 
 export interface Rule {
@@ -97,12 +100,17 @@ export class Room {
     const exists = this.players.find(p => p.id === player.id);
     if (!exists) {
       this.players.push(player);
+    } else if (exists.hasLeft) {
+      // If player rejoins, clear the hasLeft flag
+      exists.hasLeft = false;
     }
   }
 
   public removePlayer(playerId: string): void {
-    this.players = this.players.filter(p => p.id !== playerId);
-    this.tickets = this.tickets.filter(ticket => ticket.playerId !== playerId);
+    const player = this.players.find(p => p.id === playerId);
+    if (player) {
+      player.hasLeft = true;
+    }
   }
 
   public upsertTicket(ticket: TicketState): void {

@@ -57,17 +57,18 @@ const WaitingRoomStep: React.FC<WaitingRoomStepProps> = ({
         }
       };
 
-      socketService.on('player_joined', () => {
-        fetchState();
-      });
+      // Call immediately on mount to check if game is already started
+      fetchState();
 
-      socketService.on('game_started', () => {
-        navigate(`/game/${roomCode}`);
-      });
+      const onPlayerJoined = () => fetchState();
+      const onGameStarted = () => navigate(`/game/${roomCode}`);
+
+      socketService.on('player_joined', onPlayerJoined);
+      socketService.on('game_started', onGameStarted);
 
       return () => {
-        socketService.off('player_joined');
-        socketService.off('game_started');
+        socketService.off('player_joined', onPlayerJoined);
+        socketService.off('game_started', onGameStarted);
       };
     });
   }, [roomCode, navigate]);

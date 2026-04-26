@@ -59,3 +59,56 @@ export class FullHouseStrategy implements ClaimStrategy {
     return completedOnCurrentCall(ticket.cells.flat(), currentCallCount);
   }
 }
+
+export class CornersStrategy implements ClaimStrategy {
+  validate(ticket: Ticket, currentCallCount: number): boolean {
+    // Top row is index 0, bottom row is index 2
+    const topRow = ticket.cells[0];
+    const bottomRow = ticket.cells[2];
+
+    const corners: Cell[] = [];
+    
+    // Find first and last cell of top row
+    const topCells = topRow.filter(cell => cell.value !== null);
+    if (topCells.length > 0) {
+      corners.push(topCells[0], topCells[topCells.length - 1]);
+    }
+
+    // Find first and last cell of bottom row
+    const bottomCells = bottomRow.filter(cell => cell.value !== null);
+    if (bottomCells.length > 0) {
+      corners.push(bottomCells[0], bottomCells[bottomCells.length - 1]);
+    }
+
+    // Must have exactly 4 corners and all must be marked
+    if (corners.length !== 4 || corners.some(cell => !cell.isMarked)) {
+      return false;
+    }
+
+    // The max markedAtCallCount among the 4 corners must equal the currentCallCount
+    const maxCallCount = Math.max(...corners.map(cell => cell.markedAtCallCount ?? 0));
+    return maxCallCount === currentCallCount;
+  }
+}
+
+export class BigSmallStrategy implements ClaimStrategy {
+  validate(ticket: Ticket, currentCallCount: number): boolean {
+    const allCells = ticket.cells.flat().filter(cell => cell.value !== null);
+    if (allCells.length === 0) return false;
+
+    let minCell = allCells[0];
+    let maxCell = allCells[0];
+
+    for (const cell of allCells) {
+      if (cell.value! < minCell.value!) minCell = cell;
+      if (cell.value! > maxCell.value!) maxCell = cell;
+    }
+
+    if (!minCell.isMarked || !maxCell.isMarked) {
+      return false;
+    }
+
+    const maxCallCount = Math.max(minCell.markedAtCallCount ?? 0, maxCell.markedAtCallCount ?? 0);
+    return maxCallCount === currentCallCount;
+  }
+}

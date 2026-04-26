@@ -67,8 +67,12 @@ const JoinRoomFlow: React.FC<JoinRoomFlowProps> = ({ onClose }) => {
       const result = await res.json();
       if (result.success) {
         localStorage.setItem('currentPlayerId', playerId);
-        setRoomData(result.data);
-        setStep(3);
+        if (result.data.status === 'started') {
+          navigate(`/game/${roomCode}`);
+        } else {
+          setRoomData(result.data);
+          setStep(3);
+        }
       } else {
         setErrorMsg(result.message || 'Failed to join room.');
       }

@@ -6,6 +6,8 @@ import {
   MiddleLineStrategy,
   BottomLineStrategy,
   FullHouseStrategy,
+  CornersStrategy,
+  BigSmallStrategy,
 } from "./ClaimStrategy";
 
 export interface IClaimStrategyFactory {
@@ -14,19 +16,25 @@ export interface IClaimStrategyFactory {
 
 export class ClaimStrategyFactory implements IClaimStrategyFactory {
   public create(type: ClaimType): ClaimStrategy {
-    switch (type) {
-      case "Early5":
+    // Extract base type like 'housefull' from 'housefull_2', but preserve 'first_row'
+    const baseType = type.replace(/_\d+$/, '');
+    switch (baseType) {
+      case "early5":
         return new Early5Strategy();
-      case "TopLine":
+      case "first_row":
         return new TopLineStrategy();
-      case "MiddleLine":
+      case "second_row":
         return new MiddleLineStrategy();
-      case "BottomLine":
+      case "third_row":
         return new BottomLineStrategy();
-      case "FullHouse":
+      case "housefull":
         return new FullHouseStrategy();
+      case "corners":
+        return new CornersStrategy();
+      case "big_small":
+        return new BigSmallStrategy();
       default:
-        throw new Error(`Unsupported claim type: ${String(type)}`);
+        throw new Error(`Unsupported claim type: ${String(baseType)}`);
     }
   }
 }

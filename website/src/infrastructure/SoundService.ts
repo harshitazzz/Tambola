@@ -222,15 +222,17 @@ export class SoundService {
   }
 
   private static getNumberCallPhrase(number: number): string {
+    const numberCall = this.getNumberWords(number);
+    if (number < 10) {
+      return `Single number ${numberCall}`;
+    }
+    
     const digitCall = String(number)
       .split("")
       .map((digit) => this.numberWords[Number(digit)])
       .join(" ");
 
-    const numberCall = this.getNumberWords(number);
-    return digitCall === numberCall
-      ? `Number ${numberCall}`
-      : `${digitCall}, ${numberCall}`;
+    return `${digitCall} ${numberCall}`;
   }
 
   private static getNumberWords(number: number): string {

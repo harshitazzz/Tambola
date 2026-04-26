@@ -17,13 +17,13 @@ interface SettingsStepProps {
 }
 
 const DEFAULT_RULES: Rule[] = [
+  { id: 'early5', name: 'Early 5', count: 1, points: 50, enabled: true, description: 'First 5 numbers struck off anywhere on the ticket.' },
   { id: 'housefull', name: 'Housefull', count: 1, points: 500, enabled: true, description: 'All 15 numbers on the ticket are struck off.' },
   { id: 'first_row', name: '1st Row', count: 1, points: 100, enabled: true, description: 'All 5 numbers in the top row are struck off.' },
   { id: 'second_row', name: '2nd Row', count: 1, points: 100, enabled: true, description: 'All 5 numbers in the middle row are struck off.' },
   { id: 'third_row', name: '3rd Row', count: 1, points: 100, enabled: true, description: 'All 5 numbers in the bottom row are struck off.' },
   { id: 'corners', name: 'Corners', count: 1, points: 150, enabled: true, description: 'The four corner numbers (1st and last of top and bottom rows) are struck off.' },
-  { id: 'biggest_num', name: 'Biggest Num', count: 1, points: 50, enabled: false, description: 'The highest number on the ticket is struck off.' },
-  { id: 'smallest_num', name: 'Smallest Num', count: 1, points: 50, enabled: false, description: 'The lowest number on the ticket is struck off.' },
+  { id: 'big_small', name: 'Big & Small', count: 1, points: 50, enabled: false, description: 'Both the highest and the lowest numbers on the ticket are struck off.' },
 ];
 
 const SettingsStep: React.FC<SettingsStepProps> = ({ onNext, onBack }) => {

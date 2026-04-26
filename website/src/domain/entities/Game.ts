@@ -1,7 +1,7 @@
 import type { Ticket } from "./Ticket";
 import type { Player } from "./Player";
 
-export type ClaimType = "Early5" | "TopLine" | "MiddleLine" | "BottomLine" | "FullHouse";
+export type ClaimType = string;
 
 export interface Claim {
   playerId: string;

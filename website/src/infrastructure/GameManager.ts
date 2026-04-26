@@ -41,6 +41,13 @@ export class GameManager {
     return GameManager.instance;
   }
 
+  public setRoomId(roomId: string) {
+    if (this.state.id !== roomId) {
+      this.state = { ...this.state, id: roomId };
+      this.notify();
+    }
+  }
+
   public resetGame(newRoomId?: string) {
     this.state = {
       id: newRoomId || "game-" + Date.now(),
@@ -48,10 +55,30 @@ export class GameManager {
       players: [],
       tickets: [],
       calledNumbers: [],
-      claims: []
+      currentNumber: null,
+      claims: [],
+      roomId: newRoomId || "game-" + Date.now(),
     };
     this.resetNumbers();
     this.notify();
+  }
+
+  public async refreshRoomState() {
+    try {
+      const res = await fetch(`/api/rooms/get/${this.state.id}`);
+      const result = await res.json();
+      if (result.success) {
+        this.hydrateFromServerState({
+          status: result.data.status,
+          players: result.data.players,
+          tickets: result.data.tickets,
+          calledNumbers: result.data.calledNumbers,
+          markedNumbers: result.data.markedNumbers
+        });
+      }
+    } catch (err) {
+      console.error('Failed to refresh room state', err);
+    }
   }
 
   // Observer Pattern Implementation
@@ -74,11 +101,16 @@ export class GameManager {
   // Use Cases
   public addPlayer(name: string, id?: string): Player {
     const player: Player = { id: id || "p-" + Date.now(), name };
-    this.state.players.push(player);
     
     const ticketId = "t-" + Date.now();
     const ticket = this.generateTicketUseCase.execute(player.id, ticketId);
-    this.state.tickets.push(ticket);
+    
+    this.state = {
+      ...this.state,
+      players: [...this.state.players, player],
+      tickets: [...this.state.tickets, ticket]
+    };
+
     socketService.emit("sync_ticket", { code: this.state.id, ticket });
 
     this.notify();
@@ -87,17 +119,30 @@ export class GameManager {
 
   public ensureLocalPlayerHasTicket(playerId: string, fallbackName: string): void {
     let player = this.state.players.find(p => p.id === playerId);
+    let nextPlayers = this.state.players;
     if (!player) {
       player = { id: playerId, name: fallbackName };
-      this.state.players.push(player);
+      nextPlayers = [...this.state.players, player];
     }
     
     const hasTicket = this.state.tickets.some(t => t.playerId === playerId);
     if (!hasTicket) {
       const ticketId = "t-" + Date.now();
       const ticket = this.generateTicketUseCase.execute(player.id, ticketId);
-      this.state.tickets.push(ticket);
+      
+      this.state = {
+        ...this.state,
+        players: nextPlayers,
+        tickets: [...this.state.tickets, ticket]
+      };
+      
       socketService.emit("sync_ticket", { code: this.state.id, ticket });
+      this.notify();
+    } else if (nextPlayers !== this.state.players) {
+      this.state = {
+        ...this.state,
+        players: nextPlayers
+      };
       this.notify();
     }
   }
@@ -165,6 +210,13 @@ export class GameManager {
     const playerTickets = this.state.tickets.filter(t => t.playerId === playerId);
     if (playerTickets.length === 0) return false;
 
+    // Check if player already claimed a variant of this rule
+    const baseType = type.replace(/_\d+$/, '');
+    const userAlreadyClaimedBaseType = this.state.claims.some(c => 
+      c.playerId === playerId && c.isValid && c.type.replace(/_\d+$/, '') === baseType
+    );
+    if (userAlreadyClaimedBaseType) return false;
+
     const ticket = playerTickets[0];
     const alreadyClaimed = this.state.claims.find(c => c.type === type && c.isValid);
     const result = this.claimGameUseCase.execute({
@@ -175,7 +227,31 @@ export class GameManager {
     });
     const isValid = result.isValid;
     const claimRecord: Claim = { playerId, type, isValid };
-    this.state.claims.push(claimRecord);
+    
+    let nextPlayers = this.state.players;
+    let nextStatus = this.state.status;
+
+    if (isValid && baseType === 'housefull') {
+      const finishedCount = this.state.players.filter(p => p.isFinished).length;
+      const rank = finishedCount + 1;
+      nextPlayers = this.state.players.map(p => 
+        p.id === playerId ? { ...p, isFinished: true, finishedRank: rank } : p
+      );
+      socketService.emit('player_finished', { code: this.state.id, playerId, rank });
+
+      // Check if all active players are finished
+      const activePlayers = nextPlayers.filter(p => !p.hasLeft);
+      if (activePlayers.length > 0 && activePlayers.every(p => p.isFinished)) {
+        nextStatus = 'Finished';
+      }
+    }
+
+    this.state = {
+      ...this.state,
+      claims: [...this.state.claims, claimRecord],
+      players: nextPlayers,
+      status: nextStatus
+    };
     
     if (isValid) {
         SoundService.playWinSound();
@@ -218,10 +294,46 @@ export class GameManager {
   public syncClaimResult(playerId: string, type: ClaimType, isValid: boolean) {
     const exists = this.state.claims.find(c => c.playerId === playerId && c.type === type && c.isValid === isValid);
     if (!exists) {
-       this.state.claims.push({ playerId, type, isValid });
+       this.state = {
+         ...this.state,
+         claims: [...this.state.claims, { playerId, type, isValid }]
+       };
        if (isValid) SoundService.playWinSound();
        this.notify();
     }
+  }
+
+  public syncPlayerLeft(playerId: string) {
+    this.state = {
+      ...this.state,
+      players: this.state.players.map(p => 
+        p.id === playerId ? { ...p, hasLeft: true } : p
+      )
+    };
+    
+    // Check if game should end because remaining active players are all finished
+    const activePlayers = this.state.players.filter(p => !p.hasLeft);
+    if (this.state.status === 'Playing' && activePlayers.length > 0 && activePlayers.every(p => p.isFinished)) {
+       this.state = { ...this.state, status: 'Finished' };
+    }
+    
+    this.notify();
+  }
+
+  public syncPlayerFinished(playerId: string, rank: number) {
+    this.state = {
+      ...this.state,
+      players: this.state.players.map(p => 
+        p.id === playerId ? { ...p, isFinished: true, finishedRank: rank } : p
+      )
+    };
+
+    const activePlayers = this.state.players.filter(p => !p.hasLeft);
+    if (this.state.status === 'Playing' && activePlayers.length > 0 && activePlayers.every(p => p.isFinished)) {
+       this.state = { ...this.state, status: 'Finished' };
+    }
+
+    this.notify();
   }
 
   public syncMarkNumber(ticketId: string, cellId: string, isMarked: boolean, markedAtCallCount?: number) {
@@ -242,7 +354,12 @@ export class GameManager {
       })
     );
 
-    this.state.tickets[ticketIndex] = { ...ticket, cells: nextCells };
+    const nextTickets = [...this.state.tickets];
+    nextTickets[ticketIndex] = { ...ticket, cells: nextCells };
+    this.state = {
+      ...this.state,
+      tickets: nextTickets
+    };
     this.notify();
   }
 

@@ -39,7 +39,10 @@ export interface RoomStateDocument {
 const playerSchema = new Schema<Player>(
   {
     id: { type: String, required: true },
-    name: { type: String, required: true }
+    name: { type: String, required: true },
+    isFinished: { type: Boolean, required: false },
+    finishedRank: { type: Number, required: false },
+    hasLeft: { type: Boolean, required: false }
   },
   { _id: false }
 );

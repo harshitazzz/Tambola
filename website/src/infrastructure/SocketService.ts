@@ -25,7 +25,7 @@ class SocketService {
         console.log('Connected to WebSocket server');
         if (this.roomCode) {
           // Re-join the room on reconnect
-          this.socket?.emit('join_room', this.roomCode);
+          this.socket?.emit('join_room', { code: this.roomCode, playerId: (this as any).playerId });
         }
       });
 
@@ -41,12 +41,15 @@ class SocketService {
     return this.socket;
   }
 
-  public joinRoom(code: string): void {
+  public joinRoom(code: string, playerId?: string): void {
     this.roomCode = code;
     if (this.socket?.connected) {
-      this.socket.emit('join_room', code);
+      this.socket.emit('join_room', { code, playerId });
     } else {
-      this.connect(); // Ensuring it connects if it hasn't
+      // Connect first, then emit in the connect callback (need to pass playerId there too)
+      // Actually we can just store playerId to pass on reconnect
+      (this as any).playerId = playerId;
+      this.connect();
     }
   }
 

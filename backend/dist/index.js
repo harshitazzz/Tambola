@@ -38,12 +38,17 @@ const io = new socket_io_1.Server(httpServer, {
         methods: ['GET', 'POST']
     }
 });
+const socketDataMap = new Map();
 const roomManager = RoomManager_1.RoomManager.getInstance();
 io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
-    socket.on('join_room', (code) => {
+    socket.on('join_room', (data) => {
+        // Handle both old format (string code) and new format (object)
+        const code = typeof data === 'string' ? data : data.code;
+        const playerId = typeof data === 'string' ? undefined : data.playerId;
         socket.join(code);
         console.log(`Socket ${socket.id} joined room: ${code}`);
+        socketDataMap.set(socket.id, { code, playerId });
         const room = roomManager.getRoom(code);
         if (room) {
             socket.emit('room_state_sync', {
@@ -82,6 +87,18 @@ io.on('connection', (socket) => {
     });
     socket.on('disconnect', () => {
         console.log(`Socket disconnected: ${socket.id}`);
+        const data = socketDataMap.get(socket.id);
+        if (data) {
+            const { code, playerId } = data;
+            if (playerId) {
+                const room = roomManager.getRoom(code);
+                if (room) {
+                    room.removePlayer(playerId);
+                    io.to(code).emit('player_left', playerId);
+                }
+            }
+            socketDataMap.delete(socket.id);
+        }
     });
 });
 async function startServer() {

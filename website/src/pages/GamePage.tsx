@@ -1,17 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { History, Home, Users, X, Volume2, VolumeX } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { History, Home, Users, X, Volume2, VolumeX, Trophy } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useGameState } from '../presentation/hooks/useGameState';
 import { GameManager } from '../infrastructure/GameManager';
 import { SoundService } from '../infrastructure/SoundService';
 import { TicketGrid } from '../presentation/components/TicketGrid';
 import { PlayerPanel } from '../presentation/components/PlayerPanel';
-import type { ClaimType } from '../domain/entities/Game';
+import { ConfettiModal } from '../presentation/components/ConfettiModal';
 
 interface RoomRule {
-  id?: string;
+  id: string;
   name: string;
+  count: number;
   points: number;
 }
 
@@ -20,22 +22,6 @@ interface RoomSettings {
   autoInterval?: 3 | 5 | 7 | null;
   rules: RoomRule[];
 }
-
-const DEFAULT_CLAIM_POINTS: Record<ClaimType, number> = {
-  Early5: 50,
-  TopLine: 100,
-  MiddleLine: 100,
-  BottomLine: 100,
-  FullHouse: 500,
-};
-
-const CLAIM_RULE_KEYS: Record<ClaimType, string[]> = {
-  Early5: ['early5', 'early 5'],
-  TopLine: ['first_row', '1st row', 'top line'],
-  MiddleLine: ['second_row', '2nd row', 'middle line'],
-  BottomLine: ['third_row', '3rd row', 'bottom line'],
-  FullHouse: ['housefull', 'full house', 'fullhouse'],
-};
 
 const ALL_NUMBERS = Array.from({ length: 90 }, (_, index) => index + 1);
 
@@ -49,6 +35,8 @@ const GamePage: React.FC = () => {
   const [roomSettings, setRoomSettings] = useState<RoomSettings | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
+  const [showConfettiModal, setShowConfettiModal] = useState(false);
+  const [hasSeenConfettiModal, setHasSeenConfettiModal] = useState(false);
   const [isAutoCallStopped, setIsAutoCallStopped] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(SoundService.isSoundEnabled());
   const latestCalledCountRef = useRef(gameState.calledNumbers.length);
@@ -79,6 +67,13 @@ const GamePage: React.FC = () => {
   }, [gameState.calledNumbers.length]);
 
   useEffect(() => {
+    if (localPlayer?.isFinished && !hasSeenConfettiModal) {
+      setShowConfettiModal(true);
+      setHasSeenConfettiModal(true);
+    }
+  }, [localPlayer?.isFinished, hasSeenConfettiModal]);
+
+  useEffect(() => {
     if (!isHost || gameState.status !== 'Playing' || roomSettings?.callingMethod !== 'auto' || isAutoCallStopped) return;
 
     const intervalMs = (roomSettings.autoInterval ?? 5) * 1000;
@@ -91,38 +86,31 @@ const GamePage: React.FC = () => {
     return () => window.clearInterval(intervalId);
   }, [gameState.status, isAutoCallStopped, isHost, manager, roomSettings]);
 
-  const claimPoints = useMemo(() => {
-    const points = { ...DEFAULT_CLAIM_POINTS };
-
-    roomSettings?.rules?.forEach((rule) => {
-      const ruleKey = `${rule.id ?? ''} ${rule.name}`.toLowerCase();
-      (Object.keys(CLAIM_RULE_KEYS) as ClaimType[]).forEach((claimType) => {
-        if (CLAIM_RULE_KEYS[claimType].some((key) => ruleKey.includes(key))) {
-          points[claimType] = rule.points;
-        }
-      });
-    });
-
-    return points;
-  }, [roomSettings]);
+  const getPointsForClaim = (claimType: string) => {
+    if (!roomSettings) return 0;
+    // Extract base type like 'housefull' from 'housefull_2', but preserve 'first_row'
+    const baseType = claimType.replace(/_\d+$/, '');
+    const rule = roomSettings.rules.find(r => r.id === baseType);
+    return rule ? rule.points : 0;
+  };
 
   const localPlayerPoints = useMemo(() => {
     if (!localPlayer) return 0;
 
     return gameState.claims
       .filter((claim) => claim.playerId === localPlayer.id && claim.isValid)
-      .reduce((total, claim) => total + claimPoints[claim.type], 0);
-  }, [claimPoints, gameState.claims, localPlayer]);
+      .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
+  }, [gameState.claims, localPlayer, roomSettings]);
 
   const playerScores = useMemo(() => {
     return gameState.players.map((player) => {
       const points = gameState.claims
         .filter((claim) => claim.playerId === player.id && claim.isValid)
-        .reduce((total, claim) => total + claimPoints[claim.type], 0);
+        .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
 
       return { ...player, points };
-    });
-  }, [claimPoints, gameState.claims, gameState.players]);
+    }).sort((a, b) => b.points - a.points);
+  }, [gameState.claims, gameState.players, roomSettings]);
 
   const previousNumbers = gameState.calledNumbers.slice(-5, -1).reverse();
 
@@ -281,8 +269,9 @@ const GamePage: React.FC = () => {
                 <PlayerPanel 
                   gameState={gameState}
                   playerId={localPlayer.id}
-                  claimPoints={claimPoints}
+                  rules={roomSettings?.rules || []}
                   compact={gameState.status === 'Playing'}
+                  isFinished={localPlayer.isFinished}
                   onClaim={(type) => manager.claim(localPlayer.id, type)}
                 />
               </div>
@@ -356,10 +345,12 @@ const GamePage: React.FC = () => {
                 key={player.id}
                 className="flex items-center justify-between rounded-2xl border border-green-100 bg-green-50/70 px-3 py-2"
               >
-                <span className="min-w-0 truncate pr-3 font-black text-[#114c20]">
+                <span className={`min-w-0 truncate pr-3 font-black ${player.hasLeft ? 'text-slate-400 line-through' : 'text-[#114c20]'}`}>
                   {player.name}
+                  {player.hasLeft && <span className="ml-2 text-xs font-bold text-slate-400">(Left)</span>}
+                  {player.isFinished && !player.hasLeft && <span className="ml-2 text-xs font-bold text-[#1a7631]">(Finished)</span>}
                 </span>
-                <span className="shrink-0 rounded-full bg-white px-3 py-1 text-sm font-black text-[#1a7631]">
+                <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-black ${player.hasLeft ? 'bg-slate-200 text-slate-500' : 'bg-white text-[#1a7631]'}`}>
                   {player.points} pts
                 </span>
               </div>
@@ -367,6 +358,82 @@ const GamePage: React.FC = () => {
           </div>
         </aside>
       )}
+
+      <AnimatePresence>
+        {gameState.status === 'Finished' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center"
+              onAnimationComplete={() => {
+                const duration = 3000;
+                const end = Date.now() + duration;
+
+                const frame = () => {
+                  confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#1a7631', '#114c20', '#f8f3ea', '#FFD700']
+                  });
+                  confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#1a7631', '#114c20', '#f8f3ea', '#FFD700']
+                  });
+
+                  if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                  }
+                };
+                frame();
+              }}
+            >
+              <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-black text-[#114c20] mb-6">
+                {playerScores[0]?.id === savedPlayerId ? '🏆 You Won!' : 'Game Over!'}
+              </h2>
+              <div className="space-y-3 mb-8">
+                {playerScores.slice(0, 5).map((player, index) => (
+                  <div key={player.id} className="flex items-center justify-between bg-green-50 rounded-xl p-4 border border-green-100">
+                    <div className="flex items-center gap-3">
+                      <span className={`flex items-center justify-center w-8 h-8 rounded-full font-bold ${index === 0 ? 'bg-yellow-400 text-yellow-900' : index === 1 ? 'bg-slate-300 text-slate-800' : index === 2 ? 'bg-amber-600 text-white' : 'bg-green-200 text-[#114c20]'}`}>
+                        {index + 1}
+                      </span>
+                      <span className="font-bold text-lg text-[#114c20]">
+                        {player.name} {player.id === savedPlayerId ? '(You)' : ''}
+                        {index === 0 && <span className="ml-2 text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full uppercase tracking-wider font-black">Winner</span>}
+                      </span>
+                    </div>
+                    <span className="font-black text-xl text-[#1a7631]">{player.points} pts</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full rounded-full bg-[#1a7631] px-6 py-4 text-lg font-bold text-white shadow-lg transition hover:bg-[#114c20]"
+              >
+                Return to Home
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ConfettiModal 
+        isVisible={showConfettiModal} 
+        rank={localPlayer?.finishedRank} 
+        onClose={() => setShowConfettiModal(false)} 
+      />
     </div>
   );
 };
