@@ -119,7 +119,7 @@ io.on('connection', (socket: Socket) => {
   socket.on('start_game', (code: string) => {
     console.log(`[Socket] Received start_game for code: ${code}`);
     void roomManager.startRoom(code).then((room) => {
-       console.log(`[Socket] Room status after startRoom: ${room?.getStatus()}`);
+      console.log(`[Socket] Room status after startRoom: ${room?.getStatus()}`);
     });
     io.to(code).emit('game_started');
     console.log(`[Socket] Emitted game_started to room: ${code}`);
@@ -144,7 +144,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('claim_result', ({ code, playerId, claimType, isValid }: ClaimResultPayload) => {
-     io.to(code).emit('claim_result_broadcast', { playerId, claimType, isValid });
+    io.to(code).emit('claim_result_broadcast', { playerId, claimType, isValid });
   });
 
   socket.on('player_finished', ({ code, playerId, rank }: { code: string, playerId: string, rank: number }) => {

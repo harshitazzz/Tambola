@@ -28,7 +28,7 @@ const ALL_NUMBERS = Array.from({ length: 90 }, (_, index) => index + 1);
 const GamePage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  
+
   const roomId = code || 'Local-Test';
   const gameState = useGameState(roomId);
   const manager = GameManager.getInstance();
@@ -141,18 +141,17 @@ const GamePage: React.FC = () => {
                   const isEnabled = SoundService.toggleSound();
                   setSoundEnabled(isEnabled);
                 }}
-                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition ${
-                  soundEnabled
+                className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition ${soundEnabled
                     ? 'border-green-200 bg-white/85 text-[#114c20] hover:bg-green-50'
                     : 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
-                }`}
+                  }`}
                 title={soundEnabled ? 'Mute sound & voice' : 'Unmute sound & voice'}
               >
                 {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                 {soundEnabled ? 'Sound On' : 'Sound Off'}
               </button>
-              <button 
-                className="flex items-center gap-2 bg-white/80 hover:bg-rose-50 hover:text-rose-700 transition-colors px-4 py-2 rounded-full font-bold border border-green-200 hover:border-rose-200 shadow-sm" 
+              <button
+                className="flex items-center gap-2 bg-white/80 hover:bg-rose-50 hover:text-rose-700 transition-colors px-4 py-2 rounded-full font-bold border border-green-200 hover:border-rose-200 shadow-sm"
                 onClick={() => navigate('/')}
               >
                 <Home size={18} />
@@ -191,16 +190,30 @@ const GamePage: React.FC = () => {
 
         <div className="flex flex-col items-center justify-center w-full gap-3">
           {isHost && gameState.status === 'Waiting' && (
-            <button
-              onClick={() => {
-                SoundService.initFromUserGesture();
-                setIsAutoCallStopped(false);
-                manager.startGame();
-              }}
-              className="rounded-full bg-[#1a7631] px-8 py-3 text-xl font-black text-white shadow-xl shadow-green-700/20 transition hover:bg-[#114c20]"
-            >
-              Start
-            </button>
+            <div className="flex flex-col items-center gap-6 w-full max-w-4xl">
+              <button
+                onClick={() => {
+                  SoundService.initFromUserGesture();
+                  setIsAutoCallStopped(false);
+                  manager.startGame();
+                }}
+                className="rounded-full bg-[#1a7631] px-8 py-3 text-xl font-black text-white shadow-xl shadow-green-700/20 transition hover:bg-[#114c20]"
+              >
+                Start
+              </button>
+
+              <div className="w-full rounded-[28px] border border-green-200 bg-white/80 p-6 shadow-xl shadow-green-900/10">
+                <h2 className="text-xl font-black text-[#114c20] mb-4 text-center">Players in Room ({gameState.players.length})</h2>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {playerScores.map(p => (
+                    <div key={p.id} className={`px-4 py-2 rounded-full font-bold shadow-sm border ${p.hasLeft ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-[#1a7631] border-green-200'}`}>
+                      {p.hasLeft && <span className="text-red-500 mr-2 uppercase text-xs tracking-wider">Left</span>}
+                      <span className={p.hasLeft ? 'line-through' : ''}>{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {!isHost && gameState.status === 'Waiting' && (
@@ -260,26 +273,53 @@ const GamePage: React.FC = () => {
           <div className="w-full max-w-6xl">
             {localTicket && localPlayer ? (
               <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-                <TicketGrid 
+                <TicketGrid
                   ticket={localTicket}
                   playerName={localPlayer.name}
                   totalPoints={localPlayerPoints}
                   onMark={(cellId) => manager.markNumber(localTicket.id, cellId)}
                 />
-                <PlayerPanel 
-                  gameState={gameState}
-                  playerId={localPlayer.id}
-                  rules={roomSettings?.rules || []}
-                  compact={gameState.status === 'Playing'}
-                  isFinished={localPlayer.isFinished}
-                  onClaim={(type) => manager.claim(localPlayer.id, type)}
-                />
+                <div className="flex flex-col gap-5">
+                  <PlayerPanel
+                    gameState={gameState}
+                    playerId={localPlayer.id}
+                    rules={roomSettings?.rules || []}
+                    compact={gameState.status === 'Playing'}
+                    isFinished={localPlayer.isFinished}
+                    onClaim={(type) => manager.claim(localPlayer.id, type)}
+                  />
+
+                  {/* Real-time Players List */}
+                  <div className="rounded-[28px] border border-green-200 bg-white/80 p-6 shadow-xl shadow-green-900/10 flex flex-col flex-1">
+                    <h2 className="text-lg font-black text-[#114c20] mb-4 flex items-center gap-2">
+                      <Users size={20} />
+                      All Players ({gameState.players.length})
+                    </h2>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      {playerScores.map((player) => (
+                        <div
+                          key={player.id}
+                          className="flex items-center justify-between rounded-2xl border border-green-100 bg-green-50/70 px-3 py-2"
+                        >
+                          <span className={`min-w-0 truncate pr-3 font-black ${player.hasLeft ? 'text-slate-400' : 'text-[#114c20]'}`}>
+                            {player.hasLeft && <span className="text-red-500 mr-2 uppercase text-[10px] tracking-wider no-underline">Left</span>}
+                            <span className={player.hasLeft ? 'line-through' : ''}>{player.name}</span>
+                            {player.isFinished && !player.hasLeft && <span className="ml-2 text-xs font-bold text-[#1a7631]">(Finished)</span>}
+                          </span>
+                          <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-black ${player.hasLeft ? 'bg-slate-200 text-slate-500' : 'bg-white text-[#1a7631]'}`}>
+                            {player.points} pts
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : (
-                <div className="bg-white/80 border border-green-200 p-8 rounded-[28px] flex flex-col items-center justify-center min-h-[300px] w-full shadow-xl shadow-green-900/10">
-                   <span className="animate-spin text-4xl mb-4">🎲</span>
-                   <p className="text-[#1a7631] font-semibold">Generating your ticket...</p>
-                </div>
+              <div className="bg-white/80 border border-green-200 p-8 rounded-[28px] flex flex-col items-center justify-center min-h-[300px] w-full shadow-xl shadow-green-900/10">
+                <span className="animate-spin text-4xl mb-4">🎲</span>
+                <p className="text-[#1a7631] font-semibold">Generating your ticket...</p>
+              </div>
             )}
           </div>
         </div>
@@ -309,11 +349,10 @@ const GamePage: React.FC = () => {
               return (
                 <div
                   key={num}
-                  className={`flex aspect-square items-center justify-center rounded-full border text-[11px] font-black ${
-                    isCalled
+                  className={`flex aspect-square items-center justify-center rounded-full border text-[11px] font-black ${isCalled
                       ? 'border-[#6bbf7a] bg-[#bfe8c7] text-[#0b3d19]'
                       : 'border-slate-200 bg-slate-50 text-slate-400'
-                  }`}
+                    }`}
                 >
                   {num}
                 </div>
@@ -345,9 +384,9 @@ const GamePage: React.FC = () => {
                 key={player.id}
                 className="flex items-center justify-between rounded-2xl border border-green-100 bg-green-50/70 px-3 py-2"
               >
-                <span className={`min-w-0 truncate pr-3 font-black ${player.hasLeft ? 'text-slate-400 line-through' : 'text-[#114c20]'}`}>
-                  {player.name}
-                  {player.hasLeft && <span className="ml-2 text-xs font-bold text-slate-400">(Left)</span>}
+                <span className={`min-w-0 truncate pr-3 font-black ${player.hasLeft ? 'text-slate-400' : 'text-[#114c20]'}`}>
+                  {player.hasLeft && <span className="text-red-500 mr-2 uppercase text-[10px] tracking-wider no-underline">Left</span>}
+                  <span className={player.hasLeft ? 'line-through' : ''}>{player.name}</span>
                   {player.isFinished && !player.hasLeft && <span className="ml-2 text-xs font-bold text-[#1a7631]">(Finished)</span>}
                 </span>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-black ${player.hasLeft ? 'bg-slate-200 text-slate-500' : 'bg-white text-[#1a7631]'}`}>
@@ -429,10 +468,10 @@ const GamePage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <ConfettiModal 
-        isVisible={showConfettiModal} 
-        rank={localPlayer?.finishedRank} 
-        onClose={() => setShowConfettiModal(false)} 
+      <ConfettiModal
+        isVisible={showConfettiModal}
+        rank={localPlayer?.finishedRank}
+        onClose={() => setShowConfettiModal(false)}
       />
     </div>
   );

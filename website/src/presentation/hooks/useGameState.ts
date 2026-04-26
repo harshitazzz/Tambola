@@ -43,7 +43,7 @@ export const useGameState = (roomId: string) => {
 
   useEffect(() => {
     const manager = GameManager.getInstance();
-    
+
     if (manager.getState().id !== roomId) {
       manager.resetGame(roomId);
     }
@@ -72,16 +72,16 @@ export const useGameState = (roomId: string) => {
       });
     };
     const onPlayerJoined = () => {
-       console.log('A player joined the game room!');
-       manager.refreshRoomState();
+      console.log('A player joined the game room!');
+      manager.refreshRoomState();
     };
     const onPlayerLeft = (playerId: string) => {
-       manager.syncPlayerLeft(playerId);
-       console.log('A player left the game room!');
+      manager.syncPlayerLeft(playerId);
+      console.log('A player left the game room!');
     };
     const onPlayerFinished = (data: { playerId: string, rank: number }) => {
-       manager.syncPlayerFinished(data.playerId, data.rank);
-       console.log(`Player ${data.playerId} finished with rank ${data.rank}`);
+      manager.syncPlayerFinished(data.playerId, data.rank);
+      console.log(`Player ${data.playerId} finished with rank ${data.rank}`);
     };
 
     socketService.on('game_started', onGameStarted);
@@ -106,18 +106,18 @@ export const useGameState = (roomId: string) => {
       // as GameManager mutates the state object internally.
       setGameState({ ...state });
     });
-    
+
     return () => {
-       unsubscribe();
-       socketService.off('game_started', onGameStarted);
-       socketService.off('number_called', onNumberCalled);
-       socketService.off('claim_result_broadcast', onClaimResult);
-       socketService.off("mark_number_broadcast", onMarkNumber);
-       socketService.off('room_state_sync', onRoomStateSync);
-       socketService.off('player_joined', onPlayerJoined);
-       socketService.off('player_left', onPlayerLeft);
-       socketService.off('player_finished_broadcast', onPlayerFinished);
-       socketService.disconnect();
+      unsubscribe();
+      socketService.off('game_started', onGameStarted);
+      socketService.off('number_called', onNumberCalled);
+      socketService.off('claim_result_broadcast', onClaimResult);
+      socketService.off("mark_number_broadcast", onMarkNumber);
+      socketService.off('room_state_sync', onRoomStateSync);
+      socketService.off('player_joined', onPlayerJoined);
+      socketService.off('player_left', onPlayerLeft);
+      socketService.off('player_finished_broadcast', onPlayerFinished);
+      socketService.disconnect();
     };
   }, [roomId]);
 
