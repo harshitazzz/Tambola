@@ -91,11 +91,10 @@ export const HostPanel: React.FC<HostPanelProps> = ({ gameState, onCallNumber, o
           <button
             onClick={() => setAutoCallEnabled((enabled) => !enabled)}
             disabled={!canCall}
-            className={`rounded-lg px-4 py-3 font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-              autoCallEnabled
+            className={`rounded-lg px-4 py-3 font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${autoCallEnabled
                 ? 'bg-rose-700 hover:bg-rose-600'
                 : 'bg-emerald-700 hover:bg-emerald-600'
-            }`}
+              }`}
           >
             {autoCallEnabled ? 'Stop Auto Call' : 'Start Auto Call'}
           </button>

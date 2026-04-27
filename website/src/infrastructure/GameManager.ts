@@ -55,9 +55,7 @@ export class GameManager {
       players: [],
       tickets: [],
       calledNumbers: [],
-      currentNumber: null,
       claims: [],
-      roomId: newRoomId || "game-" + Date.now(),
     };
     this.resetNumbers();
     this.notify();

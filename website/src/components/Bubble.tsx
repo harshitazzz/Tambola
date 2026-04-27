@@ -33,7 +33,7 @@ const Bubble = ({ num, bottom, top, left, right, size, delay }: BubbleProps) => 
   const particles = Array.from({ length: 8 }).map((_, i) => {
     const angle = (i / 8) * Math.PI * 2;
     // Explode outward distance
-    const dist = size * 0.8; 
+    const dist = size * 0.8;
     return {
       x: Math.cos(angle) * dist,
       y: Math.sin(angle) * dist,
@@ -80,7 +80,7 @@ const Bubble = ({ num, bottom, top, left, right, size, delay }: BubbleProps) => 
                 opacity: { duration: 0.2 }
               }
             }}
-            exit={{ 
+            exit={{
               scale: 1.3, // "zoom out" slightly before burst
               opacity: 0,
               transition: { duration: 0.15 }

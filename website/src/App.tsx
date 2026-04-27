@@ -19,12 +19,12 @@ function HomePage() {
 
   const bubbles = [
     { num: 23, bottom: '10%', right: '10%', size: 100 },
-    { num: 8,  bottom: '65%', right: '6%',  size: 70  },
-    { num: 45, top: '20%',    left: '8%',   size: 85  },
-    { num: 67, bottom: '30%', left: '12%',  size: 90  },
-    { num: 12, top: '15%',    right: '25%', size: 60  },
-    { num: 89, bottom: '8%',  left: '35%',  size: 75  },
-    { num: 7,  top: '40%',    right: '15%', size: 55  },
+    { num: 8, bottom: '65%', right: '6%', size: 70 },
+    { num: 45, top: '20%', left: '8%', size: 85 },
+    { num: 67, bottom: '30%', left: '12%', size: 90 },
+    { num: 12, top: '15%', right: '25%', size: 60 },
+    { num: 89, bottom: '8%', left: '35%', size: 75 },
+    { num: 7, top: '40%', right: '15%', size: 55 },
   ];
 
   const containerVariants: Variants = {

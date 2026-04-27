@@ -1,65 +1,68 @@
-# Tambola 
+# Tambola
 
 A modern, highly-interactive, and aesthetically pleasing full-stack digital version of the classic Indian bingo game, Tambola.
 
-This repository houses a unified platform featuring a **React + Frontend** and a strongly-typed **Node.js/Express Backend** utilizing Object-Oriented patterns to manage real-time game flows.
+This repository houses a unified platform featuring a **React + Clean Architecture Frontend** and a strongly-typed **Node.js/Express & Socket.io Backend** utilizing robust Object-Oriented patterns to manage real-time game flows.
 
 ---
 
-## Architecture & Design Patterns
+## 🏗️ Architecture & Design Patterns
 
-The Tambola backend is built using strict TypeScript and robust **Object-Oriented Programming (OOP) Design Patterns** to ensure state isolation, clean routing, and scalability.
+The Tambola codebase is built using strict TypeScript and robust **Object-Oriented Programming (OOP) Design Patterns** to ensure state isolation, clean routing, and scalability.
 
-### 1. The Singleton Pattern
-State management across the server relies heavily on the `RoomManager` class, designed purely as a **Singleton**.
-- **Why?** Since rooms must be accessible globally regardless of the API route being hit, restricting `RoomManager` to a single instantiated instance prevents data duplication or lost states. The entire application queries `RoomManager.getInstance()`.
+### 1. Clean Architecture (Frontend)
+The React frontend completely decouples UI from business logic using Domain-Driven Design:
+- **Domain Layer:** Pure TypeScript entities (`Game`, `Player`, `Ticket`).
+- **Application Layer:** Use Cases (`GenerateTicketUseCase`, `CallNextNumberUseCase`, etc.) encapsulating game rules.
+- **Infrastructure Layer:** Core services like `GameManager` (Singleton), `SocketService`, and `SoundService`.
+- **Presentation Layer:** React UI components that observe changes from the `GameManager` state.
 
-### 2. Information Hiding & Encapsulation
-The `Room` class serves as the core entity protecting state details (e.g., players list, game rules, game status). 
-- Variables like `code`, `players`, and `settings` are strictly `private`. 
-- State modification only occurs via public setter interfaces like `addPlayer(...)` or `startGame()`, ensuring no corrupted data is inadvertently pushed into a room.
+### 2. The Singleton Pattern
+State management across both the server and client relies heavily on Singleton managers:
+- **`RoomManager` (Backend):** Ensures all active game sessions and player connections are centralized, preventing data duplication.
+- **`GameManager` (Frontend):** Maintains the single source of truth for the local client's state, updating React via the Observer pattern.
 
-### 3. Controller-Service Decoupling
-An architectural separation occurs between network layers and business logic.
-- **`RoomController`**: Handles solely Express HTTP logic (parsing `req`, returning `res.json`).
-- **`RoomManager`** (Service): Handles actual data interactions.
+### 3. Real-time Event-Driven Synchronization
+The application relies on **Socket.io** WebSockets to handle seamless, bidirectional state syncing:
+- Ensures automated caller and manual number calls are immediately reflected on all connected clients.
+- Processes realtime marking, claims, and automatic win-condition tracking.
+- Effectively handles player disconnections gracefully.
+
+*(For an in-depth dive into the structure, see [architecture.md](./architecture.md))*
 
 ---
 
-##  Application Walkthrough (User Flow)
+## 🎮 Application Walkthrough (User Flow)
 
-The application handles a completely synchronous multi-user flow entirely over automated polling. Here is a walkthrough of how the product functions:
+The application handles a completely synchronous multi-user flow over WebSockets.
 
-###  Step 1: Host Creates a Room
+### Step 1: Host Creates a Room
 1. The **Host** accesses the landing page, characterized by lush Tambola Green formatting and dropping Framer Motion physics.
-2. The Host clicks **Create Room**. They enter their nickname and configure the game settings (e.g., Auto/Manual calling, points, and specific Tambola rules like First 5 or Full House).
-3. The system generates a unique 6-character room code and a sharable URL linking directly to the room.
+2. The Host clicks **Create Room**, enters their nickname, and configures the game settings (e.g., Auto/Manual calling, Auto Call speed, points, and specific Tambola rules like First 5 or Full House).
+3. The system generates a unique room code and a sharable URL linking directly to the room.
 
-###  Step 2: Guests Join the Room
+### Step 2: Guests Join the Room
 1. The **Guest** clicks the shareable link (e.g., `/join/ABCD12`).
 2. The Guest is instantly directed to a modal prompting for their nickname (bypassing the manual code-entry step).
-3. Upon entering a nickname, the Guest is moved to the **Waiting Room**.
+3. Upon joining, WebSockets immediately synchronize their `GameManager` with the current state of the backend room.
 
-###  Step 3: The Waiting Room & Synchronization
-1. The Guest's UI renders a read-only, beautifully styled badge of the game's Active Rules and Settings, ensuring players are aware of the stakes before the game starts.
-2. Both Host and Guest interfaces display a live, updating list of participants in the room.
-
-###  Step 4: Starting the Game
-1. The Host interface enables the **Start Game** button once participants exist.
-2. When the Host clicks start, the backend `status` is updated to `'started'`.
-3. The automated polling running on the Guest's client detects the state change, immediately and synchronously routing both the Host and all Guests to the active **Game Screen**.
+### Step 3: The Game Room & Synchronization
+1. The Guest's UI renders their unique Tambola ticket, automatically generated upon joining.
+2. Both Host and Guest interfaces display a live, updating list of participants in the room via Socket broadcasts.
+3. Depending on the settings, the Host can start the game, which enables manual calling or starts the automated calling interval.
+4. Players can mark their tickets interactively and claim prizes (which are verified by the Use Cases in real-time).
 
 ---
 
-## Tech Stack
+## 💻 Tech Stack
 
-- **Frontend:** React JS, Vite, TypeScript
-- **Styling:** Vanilla CSS, Framer Motion (Animations), ThreeJS (3D Backgrounds)
-- **Backend:** Node.js, Express.js, TypeScript
+- **Frontend:** React JS, Vite, TypeScript, Tailwind-style Vanilla CSS, Framer Motion (Animations), Canvas Confetti
+- **Backend:** Node.js, Express.js, TypeScript, Socket.io (WebSockets)
+- **Database / Persistence:** MongoDB (Room State Persistence)
 
 ---
 
-##  How to Run Locally
+## 🚀 How to Run Locally
 
 You must run both the backend API and frontend servers concurrently.
 

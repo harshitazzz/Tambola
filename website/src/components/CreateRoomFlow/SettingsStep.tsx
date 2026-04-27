@@ -66,13 +66,13 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ onNext, onBack }) => {
       <div className="settings-section">
         <h3><Settings2 size={18} /> Calling Method</h3>
         <div className="toggle-group">
-          <button 
+          <button
             className={`toggle-btn ${callingMethod === 'auto' ? 'active' : ''}`}
             onClick={() => setCallingMethod('auto')}
           >
             Auto
           </button>
-          <button 
+          <button
             className={`toggle-btn ${callingMethod === 'manual' ? 'active' : ''}`}
             onClick={() => setCallingMethod('manual')}
           >
@@ -114,17 +114,17 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ onNext, onBack }) => {
                     {rule.enabled && <Check size={14} color="white" />}
                   </div>
                   <span className="rule-name">{rule.name}</span>
-                  <button 
+                  <button
                     className="info-icon"
                     onClick={() => setActiveHelp(activeHelp === rule.id ? null : rule.id)}
                   >
                     <Info size={16} />
                   </button>
                 </div>
-                
+
                 <AnimatePresence>
                   {activeHelp === rule.id && (
-                    <motion.p 
+                    <motion.p
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -138,9 +138,9 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ onNext, onBack }) => {
                 <div className="rule-inputs">
                   <div className="input-field">
                     <label>Count</label>
-                    <input 
-                      type="number" 
-                      min="1" 
+                    <input
+                      type="number"
+                      min="1"
                       max="10"
                       value={rule.count}
                       onChange={(e) => updateRule(rule.id, 'count', parseInt(e.target.value) || 1)}
@@ -149,8 +149,8 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ onNext, onBack }) => {
                   </div>
                   <div className="input-field">
                     <label>Points</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="50"
                       value={rule.points}
                       onChange={(e) => updateRule(rule.id, 'points', parseInt(e.target.value) || 0)}

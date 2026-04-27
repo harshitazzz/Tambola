@@ -37,9 +37,9 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // Automatically join as host
         const hostId = `host-${Date.now()}`;
@@ -52,7 +52,7 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
             playerId: hostId
           })
         });
-        
+
         const joinResult = await joinResponse.json();
         if (joinResult.success) {
           localStorage.setItem('currentPlayerId', hostId);
@@ -71,7 +71,7 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
 
   return (
     <div className="modal-overlay">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -137,16 +137,16 @@ const CreateRoomFlow: React.FC<CreateRoomFlowProps> = ({ onClose }) => {
               <NicknameStep key="step1" onNext={handleNicknameNext} />
             )}
             {step === 2 && (
-              <SettingsStep 
-                key="step2" 
-                onNext={handleSettingsNext} 
-                onBack={() => setStep(1)} 
+              <SettingsStep
+                key="step2"
+                onNext={handleSettingsNext}
+                onBack={() => setStep(1)}
               />
             )}
             {step === 3 && (
-              <LobbyStep 
-                key="step3" 
-                roomData={roomData} 
+              <LobbyStep
+                key="step3"
+                roomData={roomData}
               />
             )}
           </AnimatePresence>

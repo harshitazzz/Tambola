@@ -226,7 +226,7 @@ export class SoundService {
     if (number < 10) {
       return `Single number ${numberCall}`;
     }
-    
+
     const digitCall = String(number)
       .split("")
       .map((digit) => this.numberWords[Number(digit)])

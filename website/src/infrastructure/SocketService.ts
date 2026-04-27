@@ -7,7 +7,7 @@ class SocketService {
   // Queue listeners registered before socket is created
   private pendingListeners: Array<{ event: string; callback: (...args: any[]) => void }> = [];
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): SocketService {
     if (!SocketService.instance) {
@@ -20,7 +20,7 @@ class SocketService {
     if (!this.socket) {
       // Connect to the backend
       this.socket = io(import.meta.env.VITE_BACKEND_URL || window.location.origin);
-      
+
       this.socket.on('connect', () => {
         console.log('Connected to WebSocket server');
         if (this.roomCode) {

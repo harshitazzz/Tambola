@@ -1,0 +1,225 @@
+
+> website@0.0.0 lint
+> eslint .
+
+
+/Users/harshita./Desktop/Tambola/website/src/App.tsx
+  39:15  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/harshita./Desktop/Tambola/website/src/App.tsx:39:15
+  37 |     visible: {
+  38 |       y: 0, opacity: 1, scale: 1,
+> 39 |       rotate: Math.random() > 0.5 ? 4 : -4,
+     |               ^^^^^^^^^^^^^ Cannot call impure function
+  40 |       transition: { type: 'spring', damping: 10, stiffness: 80, mass: 1.2 }
+  41 |     }
+  42 |   };  react-hooks/purity
+
+/Users/harshita./Desktop/Tambola/website/src/components/Bubble.tsx
+  71:28  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/harshita./Desktop/Tambola/website/src/components/Bubble.tsx:71:28
+  69 |               scale: 1,
+  70 |               opacity: 1,
+> 71 |               y: [0, -15 - Math.random() * 10, 0],
+     |                            ^^^^^^^^^^^^^ Cannot call impure function
+  72 |               transition: {
+  73 |                 y: {
+  74 |                   duration: 4 + Math.random() * 3,                                                 react-hooks/purity
+  74:33  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/harshita./Desktop/Tambola/website/src/components/Bubble.tsx:74:33
+  72 |               transition: {
+  73 |                 y: {
+> 74 |                   duration: 4 + Math.random() * 3,
+     |                                 ^^^^^^^^^^^^^ Cannot call impure function
+  75 |                   repeat: Infinity,
+  76 |                   ease: "easeInOut",
+  77 |                   delay: Math.random() * 2                             react-hooks/purity
+  77:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+/Users/harshita./Desktop/Tambola/website/src/components/Bubble.tsx:77:26
+  75 |                   repeat: Infinity,
+  76 |                   ease: "easeInOut",
+> 77 |                   delay: Math.random() * 2
+     |                          ^^^^^^^^^^^^^ Cannot call impure function
+  78 |                 },
+  79 |                 scale: { type: 'spring', stiffness: 300, damping: 20 },
+  80 |                 opacity: { duration: 0.2 }  react-hooks/purity
+
+/Users/harshita./Desktop/Tambola/website/src/components/CreateRoomFlow/CreateRoomFlow.tsx
+  15:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/harshita./Desktop/Tambola/website/src/components/CreateRoomFlow/SettingsStep.tsx
+  15:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/harshita./Desktop/Tambola/website/src/components/JoinRoomFlow/JoinRoomFlow.tsx
+  23:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/harshita./Desktop/Tambola/website/src/components/ThreeBackground.tsx
+  105:18  warning  The ref value 'mountRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'mountRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/Users/harshita./Desktop/Tambola/website/src/infrastructure/SocketService.ts
+   8:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/harshita./Desktop/Tambola/website/src/infrastructure/SoundService.ts
+  114:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx
+   71:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx:71:7
+  69 |   useEffect(() => {
+  70 |     if (localPlayer?.isFinished && !hasSeenConfettiModal) {
+> 71 |       setShowConfettiModal(true);
+     |       ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  72 |       setHasSeenConfettiModal(true);
+  73 |     }
+  74 |   }, [localPlayer?.isFinished, hasSeenConfettiModal]);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/set-state-in-effect
+   97:37  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getPointsForClaim`, but the source dependencies were [gameState.claims, localPlayer, roomSettings]. Inferred different dependency than source.
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx:97:37
+   95 |   };
+   96 |
+>  97 |   const localPlayerPoints = useMemo(() => {
+      |                                     ^^^^^^^
+>  98 |     if (!localPlayer) return 0;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |     return gameState.claims
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |       .filter((claim) => claim.playerId === localPlayer.id && claim.isValid)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |       .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |   }, [gameState.claims, localPlayer, roomSettings]);
+      | ^^^^ Could not preserve existing manual memoization
+  104 |
+  105 |   const playerScores = useMemo(() => {
+  106 |     return gameState.players.map((player) => {                                                                                                                                                                                                                                                                                                                                                           react-hooks/preserve-manual-memoization
+   97:37  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getPointsForClaim`, but the source dependencies were [gameState.claims, localPlayer, roomSettings]. Inferred different dependency than source.
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx:97:37
+   95 |   };
+   96 |
+>  97 |   const localPlayerPoints = useMemo(() => {
+      |                                     ^^^^^^^
+>  98 |     if (!localPlayer) return 0;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |     return gameState.claims
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |       .filter((claim) => claim.playerId === localPlayer.id && claim.isValid)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |       .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |   }, [gameState.claims, localPlayer, roomSettings]);
+      | ^^^^ Could not preserve existing manual memoization
+  104 |
+  105 |   const playerScores = useMemo(() => {
+  106 |     return gameState.players.map((player) => {                                                                                                                                                                                                                                                                                                                                                           react-hooks/preserve-manual-memoization
+  103:6   warning  React Hook useMemo has a missing dependency: 'getPointsForClaim'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+  105:32  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getPointsForClaim`, but the source dependencies were [gameState.claims, gameState.players, roomSettings]. Inferred different dependency than source.
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx:105:32
+  103 |   }, [gameState.claims, localPlayer, roomSettings]);
+  104 |
+> 105 |   const playerScores = useMemo(() => {
+      |                                ^^^^^^^
+> 106 |     return gameState.players.map((player) => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |       const points = gameState.claims
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 108 |         .filter((claim) => claim.playerId === player.id && claim.isValid)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |         .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 110 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |       return { ...player, points };
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |     }).sort((a, b) => b.points - a.points);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |   }, [gameState.claims, gameState.players, roomSettings]);
+      | ^^^^ Could not preserve existing manual memoization
+  114 |
+  115 |   const previousNumbers = gameState.calledNumbers.slice(-5, -1).reverse();
+  116 |  react-hooks/preserve-manual-memoization
+  105:32  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `getPointsForClaim`, but the source dependencies were [gameState.claims, gameState.players, roomSettings]. Inferred different dependency than source.
+
+/Users/harshita./Desktop/Tambola/website/src/pages/GamePage.tsx:105:32
+  103 |   }, [gameState.claims, localPlayer, roomSettings]);
+  104 |
+> 105 |   const playerScores = useMemo(() => {
+      |                                ^^^^^^^
+> 106 |     return gameState.players.map((player) => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |       const points = gameState.claims
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 108 |         .filter((claim) => claim.playerId === player.id && claim.isValid)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |         .reduce((total, claim) => total + getPointsForClaim(claim.type), 0);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 110 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |       return { ...player, points };
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |     }).sort((a, b) => b.points - a.points);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |   }, [gameState.claims, gameState.players, roomSettings]);
+      | ^^^^ Could not preserve existing manual memoization
+  114 |
+  115 |   const previousNumbers = gameState.calledNumbers.slice(-5, -1).reverse();
+  116 |  react-hooks/preserve-manual-memoization
+  113:6   warning  React Hook useMemo has a missing dependency: 'getPointsForClaim'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+/Users/harshita./Desktop/Tambola/website/src/presentation/components/HostPanel.tsx
+  36:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/harshita./Desktop/Tambola/website/src/presentation/components/HostPanel.tsx:36:7
+  34 |   useEffect(() => {
+  35 |     if (gameState.status === "Finished") {
+> 36 |       setAutoCallEnabled(false);
+     |       ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  37 |     }
+  38 |   }, [gameState.status]);
+  39 |  react-hooks/set-state-in-effect
+
+✖ 24 problems (21 errors, 3 warnings)
+

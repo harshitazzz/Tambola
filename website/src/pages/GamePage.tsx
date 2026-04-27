@@ -142,8 +142,8 @@ const GamePage: React.FC = () => {
                   setSoundEnabled(isEnabled);
                 }}
                 className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold shadow-sm transition ${soundEnabled
-                    ? 'border-green-200 bg-white/85 text-[#114c20] hover:bg-green-50'
-                    : 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
+                  ? 'border-green-200 bg-white/85 text-[#114c20] hover:bg-green-50'
+                  : 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
                   }`}
                 title={soundEnabled ? 'Mute sound & voice' : 'Unmute sound & voice'}
               >
@@ -350,8 +350,8 @@ const GamePage: React.FC = () => {
                 <div
                   key={num}
                   className={`flex aspect-square items-center justify-center rounded-full border text-[11px] font-black ${isCalled
-                      ? 'border-[#6bbf7a] bg-[#bfe8c7] text-[#0b3d19]'
-                      : 'border-slate-200 bg-slate-50 text-slate-400'
+                    ? 'border-[#6bbf7a] bg-[#bfe8c7] text-[#0b3d19]'
+                    : 'border-slate-200 bg-slate-50 text-slate-400'
                     }`}
                 >
                   {num}
