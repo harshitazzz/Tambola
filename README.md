@@ -1,10 +1,16 @@
+
 # Tambola
 
-A modern, highly-interactive, and aesthetically pleasing full-stack digital version of the classic Indian bingo game, Tambola.
+
+A premium, highly-interactive, and aesthetically pleasing full-stack digital version of the classic Indian bingo game, Tambola. Built with a focus on real-time synchronization and clean software architecture.
+
 
 This repository houses a unified platform featuring a **React + Clean Architecture Frontend** and a strongly-typed **Node.js/Express & Socket.io Backend** utilizing robust Object-Oriented patterns to manage real-time game flows.
 
----
+
+
+## ✨ Features
+
 
 ## 🏗️ Architecture & Design Patterns
 
@@ -29,8 +35,6 @@ The application relies on **Socket.io** WebSockets to handle seamless, bidirecti
 - Effectively handles player disconnections gracefully.
 
 *(For an in-depth dive into the structure, see [architecture.md](./architecture.md))*
-
----
 
 ## 🎮 Application Walkthrough (User Flow)
 
@@ -68,18 +72,24 @@ You must run both the backend API and frontend servers concurrently.
 
 **1. Start the Backend:**
 ```bash
+
 cd backend
 npm install
+cp .env.example .env # Update with your MONGODB_URI
 npm run dev
-```
-*(Runs securely on `http://localhost:3000`)*
+Setup Frontend:
 
-**2. Start the Frontend:**
-```bash
+Bash
 cd website
 npm install
 npm run dev
-```
-*(Runs on `http://localhost:5173` — Open this in your browser)*
 
-**Testing Tip:** To simulate a real game, open `http://localhost:5173` in your normal browser to host a game, copy the join link, and open it in an **Incognito Window** to join as a guest!
+## How to Play
+Host: Click "Create Room," set your nickname and game rules, then share the room code.
+
+Joiner: Enter the room code and your nickname to enter the lobby.
+
+Play: Once the host starts, mark numbers as they are called.
+
+Claim: Click the "Claim" button when you complete a pattern. The system will automatically verify it!
+## Project Report link : https://docs.google.com/document/d/1qRi6bSMcJm2n0R8pRamsp34EUjY4qBK-2LgOvTwX1aw/edit?usp=sharing
