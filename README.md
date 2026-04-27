@@ -65,3 +65,4 @@ Joiner: Enter the room code and your nickname to enter the lobby.
 Play: Once the host starts, mark numbers as they are called.
 
 Claim: Click the "Claim" button when you complete a pattern. The system will automatically verify it!
+## Project Report link : https://docs.google.com/document/d/1qRi6bSMcJm2n0R8pRamsp34EUjY4qBK-2LgOvTwX1aw/edit?usp=sharing
