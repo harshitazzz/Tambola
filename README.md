@@ -1,4 +1,5 @@
-Tambola — Real-Time Multiplayer Game Platform
+## Tambola — 
+Real-Time Multiplayer Game Platform
 
 Live Demo: https://tambola-qmn8.onrender.com
 
