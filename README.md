@@ -1,95 +1,216 @@
+Tambola — Real-Time Multiplayer Game Platform
 
-# Tambola
+Live Demo: https://tambola-qmn8.onrender.com
 
+Tambola (Housie/Bingo) is a real-time multiplayer number game platform that allows players to create rooms, join instantly, and play together from anywhere. The system automates number calling, ticket generation, claim validation, and synchronization — removing all manual effort from traditional gameplay.
 
-A premium, highly-interactive, and aesthetically pleasing full-stack digital version of the classic Indian bingo game, Tambola. Built with a focus on real-time synchronization and clean software architecture.
+## Features
 
+*  Real-Time Multiplayer Gameplay using WebSockets
+*  Instant Room Creation & Shareable Links
+*  Auto-Generated Valid Tambola Tickets (3×9 grid)
+*  Text-to-Speech Number Calling (TTS)
+*  Auto / Manual Number Calling Modes
+*  Automatic Claim Validation (No disputes)
+*  Multiple Winning Strategies
+    * Early 5
+    * Top Line
+    * Middle Line
+    * Bottom Line
+    * Full House
+    * Corners
+    * Big & Small
+*  State Persistence (MongoDB) — recover game after refresh
+*  Real-Time Synchronization across all players
+*  Confetti + Sound Effects for wins
+*  Reconnect & Hydration Support
+*  Player Join/Leave Tracking
 
-This repository houses a unified platform featuring a **React + Clean Architecture Frontend** and a strongly-typed **Node.js/Express & Socket.io Backend** utilizing robust Object-Oriented patterns to manage real-time game flows.
+⸻
+System Architecture
 
+Tambola follows a client-server architecture with real-time event-driven communication.
 
+* Frontend: React (Clean Architecture)
+* Backend: Node.js + Express + Socket.io
+* Database: MongoDB
 
-## ✨ Features
+ High-Level Flow
 
+1. Host creates room via REST API
+2. Players join via WebSocket (join_room)
+3. Server sends full state (room_state_sync)
+4. Game runs via real-time events:
+    * call_number
+    * mark_number
+    * claim
+5. Server broadcasts updates → all clients sync instantly
 
-## 🏗️ Architecture & Design Patterns
+⸻
 
-The Tambola codebase is built using strict TypeScript and robust **Object-Oriented Programming (OOP) Design Patterns** to ensure state isolation, clean routing, and scalability.
+ Clean Architecture (Frontend)
 
-### 1. Clean Architecture (Frontend)
-The React frontend completely decouples UI from business logic using Domain-Driven Design:
-- **Domain Layer:** Pure TypeScript entities (`Game`, `Player`, `Ticket`).
-- **Application Layer:** Use Cases (`GenerateTicketUseCase`, `CallNextNumberUseCase`, etc.) encapsulating game rules.
-- **Infrastructure Layer:** Core services like `GameManager` (Singleton), `SocketService`, and `SoundService`.
-- **Presentation Layer:** React UI components that observe changes from the `GameManager` state.
+website/src/
+├── domain/          # Entities (Game, Player, Ticket)
+├── application/     # Use Cases (business logic)
+├── infrastructure/  # GameManager, SocketService, SoundService
+├── presentation/    # React components & hooks
 
-### 2. The Singleton Pattern
-State management across both the server and client relies heavily on Singleton managers:
-- **`RoomManager` (Backend):** Ensures all active game sessions and player connections are centralized, preventing data duplication.
-- **`GameManager` (Frontend):** Maintains the single source of truth for the local client's state, updating React via the Observer pattern.
+Layers Explained:
 
-### 3. Real-time Event-Driven Synchronization
-The application relies on **Socket.io** WebSockets to handle seamless, bidirectional state syncing:
-- Ensures automated caller and manual number calls are immediately reflected on all connected clients.
-- Processes realtime marking, claims, and automatic win-condition tracking.
-- Effectively handles player disconnections gracefully.
+* Domain Layer: Core business models (pure TypeScript)
+* Application Layer: Game rules (Use Cases)
+* Infrastructure Layer: External interactions (WebSocket, Audio, State)
+* Presentation Layer: UI (React Components)
 
-*(For an in-depth dive into the structure, see [architecture.md](./architecture.md))*
+⸻
 
-## 🎮 Application Walkthrough (User Flow)
+⚙️ Backend Architecture
 
-The application handles a completely synchronous multi-user flow over WebSockets.
+backend/src/
+├── models/          # Room logic
+├── routes/          # REST APIs
+├── services/        # RoomManager (core logic)
+├── persistence/     # MongoDB (Mongoose)
 
-### Step 1: Host Creates a Room
-1. The **Host** accesses the landing page, characterized by lush Tambola Green formatting and dropping Framer Motion physics.
-2. The Host clicks **Create Room**, enters their nickname, and configures the game settings (e.g., Auto/Manual calling, Auto Call speed, points, and specific Tambola rules like First 5 or Full House).
-3. The system generates a unique room code and a sharable URL linking directly to the room.
+* RoomManager (Singleton): Manages all active rooms
+* Socket.io: Real-time communication
+* MongoDB: Persistent room state
 
-### Step 2: Guests Join the Room
-1. The **Guest** clicks the shareable link (e.g., `/join/ABCD12`).
-2. The Guest is instantly directed to a modal prompting for their nickname (bypassing the manual code-entry step).
-3. Upon joining, WebSockets immediately synchronize their `GameManager` with the current state of the backend room.
+⸻
 
-### Step 3: The Game Room & Synchronization
-1. The Guest's UI renders their unique Tambola ticket, automatically generated upon joining.
-2. Both Host and Guest interfaces display a live, updating list of participants in the room via Socket broadcasts.
-3. Depending on the settings, the Host can start the game, which enables manual calling or starts the automated calling interval.
-4. Players can mark their tickets interactively and claim prizes (which are verified by the Use Cases in real-time).
+ Design Patterns Used
 
----
+🔹 Singleton Pattern
 
-## 💻 Tech Stack
+Used in:
 
-- **Frontend:** React JS, Vite, TypeScript, Tailwind-style Vanilla CSS, Framer Motion (Animations), Canvas Confetti
-- **Backend:** Node.js, Express.js, TypeScript, Socket.io (WebSockets)
-- **Database / Persistence:** MongoDB (Room State Persistence)
+* GameManager
+* SocketService
+* RoomManager
 
----
+➡ Ensures a single source of truth for game state and connections.
 
-## 🚀 How to Run Locally
+⸻
 
-You must run both the backend API and frontend servers concurrently.
+🔹 Strategy Pattern
 
-**1. Start the Backend:**
-```bash
+Used for claim validation logic
+
+* Early5Strategy
+* TopLineStrategy
+* FullHouseStrategy
+* etc.
+
+➡ Allows adding new rules without modifying existing code
+
+⸻
+
+🔹 Factory Pattern
+
+* ClaimStrategyFactory
+
+➡ Dynamically creates strategy objects based on claim type
+
+⸻
+
+🔹 Observer Pattern
+
+* GameManager + useGameState
+
+➡ Automatically updates UI when game state changes
+
+⸻
+
+🧱 SOLID Principles
+
+* S (SRP): Each class has one responsibility
+* O (OCP): Add new features without modifying existing code
+* L (LSP): All strategies interchangeable
+* I (ISP): Small, focused interfaces
+* D (DIP): Depends on abstractions, not concrete classes
+
+⸻
+
+ API Endpoints
+
+Method	Endpoint	Description
+POST	/api/rooms/create	Create room
+POST	/api/rooms/join	Join room
+POST	/api/rooms/start	Start game
+GET	/api/rooms/get/:code	Get room state
+GET	/health	Health check
+
+⸻
+
+ Real-Time Events
+
+Event	Description
+join_room	Join game room
+room_state_sync	Sync full state
+call_number	Call number
+number_called	Broadcast number
+mark_number	Mark ticket
+claim	Claim prize
+claim_result_broadcast	Share result
+player_left	Handle disconnect
+
+⸻
+
+ Tech Stack
+
+Layer	Tech
+Frontend	React + Vite + TypeScript
+Backend	Node.js + Express
+Real-Time	Socket.io
+Database	MongoDB + Mongoose
+Styling	Tailwind CSS
+Animation	Framer Motion
+3D	Three.js
+Audio	Web Audio API
+
+⸻
+
+⚡ Setup Instructions
+
+1. Clone Repo
+
+git clone https://github.com/[your-repo]/tambola.git
+
+2. Backend Setup
 
 cd backend
 npm install
-cp .env.example .env # Update with your MONGODB_URI
-npm run dev
-Setup Frontend:
 
-Bash
+Create .env:
+
+MONGO_URI=mongodb://127.0.0.1:27017/tambola
+ROOM_TTL_HOURS=12
+PORT=3000
+
+Run:
+
+npm run dev
+
+⸻
+
+3. Frontend Setup
+
 cd website
 npm install
+
+Create .env:
+
+VITE_BACKEND_URL=http://localhost:3000
+
+Run:
+
 npm run dev
 
-## How to Play
-Host: Click "Create Room," set your nickname and game rules, then share the room code.
+⸻
+👩‍💻 Author
 
-Joiner: Enter the room code and your nickname to enter the lobby.
+Harshita (Team Lead), Manan Gilhotra, Yashi Agarwal , Akhil Mishra , Adamya Tiwari
 
-Play: Once the host starts, mark numbers as they are called.
-
-Claim: Click the "Claim" button when you complete a pattern. The system will automatically verify it!
-## Project Report link : https://docs.google.com/document/d/1qRi6bSMcJm2n0R8pRamsp34EUjY4qBK-2LgOvTwX1aw/edit?usp=sharing
+Report link : https://docs.google.com/document/d/1VFo2LW-968Fv8BRMBQE1VBbWMwrKR_FAsXrWP6O3mZA/edit?usp=sharing
+Product hunt: https://www.producthunt.com/products/tambola?utm_source=twitter&utm_medium=social
